@@ -7,8 +7,8 @@
     <ProjectGuid>{D4CB08D8-DDF2-4003-B56E-E35BCEE5B9E9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MSBuildPlugin</RootNamespace>
-    <AssemblyName>MSBuildPlugin</AssemblyName>
+    <RootNamespace>DotnetDependencyAnalyzer</RootNamespace>
+    <AssemblyName>DotnetDependencyAnalyzer</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -52,7 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SimpleReadWrite.cs" />
+    <Compile Include="DependencyAnalyzer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MSBuildPlugin")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle(".NET Dependency Analyzer")]
+[assembly: AssemblyDescription("MSBuild plugin that analyzes dependencies, concerning their licenses and vulnerabilities, used in projects developed in .NET platform")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("MSBuildPlugin")]
+[assembly: AssemblyProduct("OSDA")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
