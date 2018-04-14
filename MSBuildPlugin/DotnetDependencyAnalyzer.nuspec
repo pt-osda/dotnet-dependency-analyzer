@@ -2,7 +2,7 @@
 <package >
   <metadata minClientVersion="2.5">
     <id>DotnetDependencyAnalyzer</id>
-    <version>1.0.1</version>
+    <version>1.1.0-alpha</version>
     <title>.NET Dependency Analyzer</title>
     <authors>Hugo Rocha</authors>
     <owners>$pt-osda</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/pt-osda/dotnet-dependency-analyzer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MSBuild plugin that analyzes dependencies, concerning their licenses and vulnerabilities, used in projects developed in .NET platform</description>
-    <releaseNotes>Fixed bug in plugin execution during build time.</releaseNotes>
+    <releaseNotes>Reads license url from packages and evaluates packages according to their vulnerabilities.</releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>Dotnet MSBuild Plugin Vulnerabilities Licenses</tags>
   </metadata>
