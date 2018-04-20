@@ -2,7 +2,7 @@
 <package >
   <metadata minClientVersion="2.5">
     <id>DotnetDependencyAnalyzer</id>
-    <version>1.1.0-alpha</version>
+    <version>1.1.0-alpha2</version>
     <title>.NET Dependency Analyzer</title>
     <authors>Hugo Rocha</authors>
     <owners>$pt-osda</owners>
@@ -16,6 +16,13 @@
   </metadata>
   <files>
     <file src="bin\Release\DotnetDependencyAnalyzer.dll" target="build\DotnetDependencyAnalyzer.dll" />
+    <file src="bin\Release\NuGet.Common.dll" target="build\NuGet.Common.dll" />
+    <file src="bin\Release\Newtonsoft.Json.dll" target="build\Newtonsoft.Json.dll" />
+    <file src="bin\Release\NuGet.Versioning.dll" target="build\NuGet.Versioning.dll" />
+    <file src="bin\Release\NuGet.Packaging.dll" target="build\NuGet.Packaging.dll" />
+    <file src="bin\Release\NuGet.Packaging.Core.dll" target="build\NuGet.Packaging.Core.dll" />
+    <file src="bin\Release\NuGet.Frameworks.dll" target="build\NuGet.Frameworks.dll" />
+	
     <file src="build\DotnetDependencyAnalyzer.targets" target="build\DotnetDependencyAnalyzer.targets" />
 </files>
 </package>

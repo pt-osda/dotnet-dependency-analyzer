@@ -1,13 +1,13 @@
 ﻿using NuGet.Packaging;
 using System.IO;
 
-namespace DotnetDependencyAnalyzerMSBuildTask
+namespace DotnetDependencyAnalyzer.PackageUtils
 {
     public class PackageManager
     {
-        public static PackageInfo GetPackageInfo(string hintPath)
+        public static PackageInfo GetPackageInfo(string path)
         {
-            string packageFilePath = GetPackageFilePath(hintPath);
+            string packageFilePath = GetPackageFilePath(path);
             NuspecReader packageReader = new PackageArchiveReader(packageFilePath).NuspecReader;
             return new PackageInfo
             {
@@ -18,11 +18,10 @@ namespace DotnetDependencyAnalyzerMSBuildTask
             };
         }
 
-        private static string GetPackageFilePath(string hintPath)
+        private static string GetPackageFilePath(string path)
         {
-            string packageDir = Path.GetFullPath(Path.Combine(hintPath, @"..\..\..\"));
-            string packageFile = new DirectoryInfo(packageDir).Name + ".nupkg";
-            return Path.Combine(packageDir, packageFile);
+            string packageFile = new DirectoryInfo(path).Name + ".nupkg";
+            return Path.Combine(path, packageFile);
         }
     }
 }

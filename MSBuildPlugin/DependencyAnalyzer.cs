@@ -1,9 +1,9 @@
 ﻿using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
-using DotnetDependencyAnalyzer.Vulnerabilities;
-using DotnetDependencyAnalyzer;
+using DotnetDependencyAnalyzerMSBuildTask.Vulnerabilities;
+using DotnetDependencyAnalyzerMSBuildTask;
 
-namespace MSBuildPlugin
+namespace DotnetDependencyAnalyzerMSBuildTask
 {
     public class DependencyAnalyzer : Microsoft.Build.Utilities.Task
     {
@@ -15,7 +15,9 @@ namespace MSBuildPlugin
             BuildEngine.LogMessageEvent(new BuildMessageEventArgs("Plugin is running... ", "", _id, MessageImportance.High));
             BuildEngine.LogMessageEvent(new BuildMessageEventArgs("Project File: " + ProjectFilePath, "", _id, MessageImportance.High));
             Project project = new Project(ProjectFilePath);
-            return ValidateProjectDependencies(project);
+            bool dependenciesValidated = ValidateProjectDependencies(project);
+            ProjectCollection.GlobalProjectCollection.UnloadProject(project);
+            return dependenciesValidated;
         }
 
         private bool ValidateProjectDependencies(Project project)
@@ -27,7 +29,10 @@ namespace MSBuildPlugin
                     BuildEngine.LogMessageEvent(new BuildMessageEventArgs("", "", _id, MessageImportance.High));
                     string hintPath = item.GetMetadataValue("HintPath");
                     PackageInfo package = PackageManager.GetPackageInfo(hintPath);
-                    BuildEngine.LogMessageEvent(new BuildMessageEventArgs(string.Format("Version: {0}; Id: {1}; License: {2}", package.Version, package.Id, package.LicenseUrl), "", _id, MessageImportance.High));
+                    string licenseName = (package.HasLicense()) ?
+                                            LicenseManager.GetLicenseName(package) :
+                                            "License Not Found";
+                    BuildEngine.LogMessageEvent(new BuildMessageEventArgs(string.Format("Version: {0}; Id: {1}; License: {2}; LicenseURL: {3}", package.Version, package.Id, licenseName,package.LicenseUrl), "", _id, MessageImportance.High));
                     VulnerabilityEvaluationResult result = VulnerabiltiesEvaluation.EvaluatePackage(package.Id, package.Version);
                     BuildEngine.LogMessageEvent(new BuildMessageEventArgs(result.VulnerabilitiesNumber + " Vulnerabilities Found", "", _id, MessageImportance.High));
                     if (result.VulnerabilitiesNumber > 0)

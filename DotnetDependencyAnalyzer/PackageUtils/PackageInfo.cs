@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DotnetDependencyAnalyzerMSBuildTask
+namespace DotnetDependencyAnalyzer.PackageUtils
 {
     public class PackageInfo
     {
