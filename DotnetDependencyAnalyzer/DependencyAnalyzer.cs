@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Linq;
 using DotnetDependencyAnalyzer.Licenses;
 using DotnetDependencyAnalyzer.PackageUtils;
 using DotnetDependencyAnalyzer.Vulnerabilities;
@@ -13,15 +15,20 @@ namespace DotnetDependencyAnalyzer
         private static readonly string packagesPath = "../packages";
         private static readonly string projectPath = "./";
 
+        private static readonly string pluginId = "DotnetDependencyAnalyzer";
+
         public static void Main(string[] args)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
             Console.WriteLine("Plugin is running... ");
             DirectoryInfo projectDir = new DirectoryInfo(projectPath);
             Console.WriteLine($"Project Name: {projectDir.Name}");
             string nugetFile = Path.Combine(projectDir.FullName, packagesFile);
             if (File.Exists(nugetFile))
             {
-                NuGetPackages packages = PackageLoader.LoadPackages(nugetFile);
+                List<NuGetPackage> packages = PackageLoader.LoadPackages(nugetFile)
+                                                .Where(package => package.Id != pluginId)
+                                                .ToList();
                 ValidateProjectDependencies(packages);
             }
             else
