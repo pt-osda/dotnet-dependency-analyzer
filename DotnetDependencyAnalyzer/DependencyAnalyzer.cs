@@ -6,6 +6,8 @@ using System.Linq;
 using DotnetDependencyAnalyzer.Licenses;
 using DotnetDependencyAnalyzer.PackageUtils;
 using DotnetDependencyAnalyzer.Vulnerabilities;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace DotnetDependencyAnalyzer
 {
@@ -26,46 +28,59 @@ namespace DotnetDependencyAnalyzer
             string nugetFile = Path.Combine(projectDir.FullName, packagesFile);
             if (File.Exists(nugetFile))
             {
-                List<NuGetPackage> packages = PackageLoader.LoadPackages(nugetFile)
+                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
                                                 .Where(package => package.Id != pluginId)
                                                 .ToList();
-                ValidateProjectDependencies(packages);
+                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound);
+                GenerateReport(dependenciesEvaluated);
+                Console.WriteLine("Produced report.");
             }
             else
             {
                 Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
             }
+            Console.ReadLine();
         }
 
-        private static bool ValidateProjectDependencies(List<NuGetPackage> packages)
+        private static List<Dependency> ValidateProjectDependencies(List<NuGetPackage> packages)
         {
+            Task<Dependency>[] packageEvaluationTasks = new Task<Dependency>[packages.Count];
+            int i = 0;
             foreach (NuGetPackage package in packages)
             {
-                Console.WriteLine();
-                String packageDir = $"{package.Id}.{package.Version}";
-                PackageInfo packageInfo = PackageManager.GetPackageInfo(Path.Combine(projectPath, packagesPath, packageDir));
-                string licenseName;
-                if (!packageInfo.HasLicense())
-                {
-                    licenseName = "No license";
-                }
-                else if(!LicenseManager.TryGetLicenseName(packageInfo, out licenseName))
-                {
-                    licenseName = "Cannot find license name";
-                }
-                Console.WriteLine($"Version: {package.Version}, Id: {package.Id}, License: {licenseName}");
-                VulnerabilityEvaluationResult result = VulnerabilityEvaluation.EvaluatePackage(packageInfo.Id, packageInfo.Version);
-                Console.WriteLine($"{result.VulnerabilitiesNumber} Vulnerabilities Found");
-                if (result.VulnerabilitiesNumber > 0)
-                {
-                    int i = 1;
-                    foreach (Vulnerability v in result.VulnerabilitiesFound)
-                    {
-                        Console.WriteLine($"{i++}: {v.Title} - {v.Description}");
-                    }
-                }
+                packageEvaluationTasks[i++] = Task.Factory.StartNew(() => ValidateDependency(package));
             }
-            return true;
+            Task.WaitAll(packageEvaluationTasks);
+            return packageEvaluationTasks.Select(task => task.Result).ToList();
+        }
+
+        private static Dependency ValidateDependency(NuGetPackage package)
+        {
+            String packageDir = $"{package.Id}.{package.Version}";
+            PackageInfo packageInfo = PackageManager.GetPackageInfo(Path.Combine(projectPath, packagesPath, packageDir));
+
+            Dependency dependency = new Dependency(package.Id, package.Version)
+            {
+                License = LicenseManager.TryGetLicenseName(packageInfo)
+            };
+
+            VulnerabilityEvaluationResult vulnerabilityEvaluation = VulnerabilityEvaluation.EvaluatePackage(packageInfo.Id, packageInfo.Version);
+            if(vulnerabilityEvaluation.VulnerabilitiesFound != null)
+            {
+                dependency.Vulnerabilities = vulnerabilityEvaluation.VulnerabilitiesFound;
+            }
+
+            return dependency;
+        }
+
+        private static void GenerateReport(List<Dependency> dependenciesEvaluated)
+        {
+            Report report = new Report("Id", "1.0.0", "Report", "Report")
+            {
+                Dependencies = dependenciesEvaluated
+            };
+            string jsonReport = JsonConvert.SerializeObject(report);
+            File.WriteAllText(Path.Combine(projectPath,"report.json"), jsonReport);
         }
     }
 }

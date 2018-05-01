@@ -1,6 +1,7 @@
 ﻿using DotnetDependencyAnalyzer.PackageUtils;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 
@@ -12,32 +13,55 @@ namespace DotnetDependencyAnalyzer.Licenses
         private static readonly string githubUrl = "https://github.com/";
         private static readonly string githubApiUrl = "https://api.github.com/repos";
 
-        public static bool TryGetLicenseName(PackageInfo package, out string licenseName)
+        public static List<License> TryGetLicenseName(PackageInfo package)
         {
+            List<License> licenses = new List<License>();
             string licenseUrl = package.LicenseUrl;
-            if (IsLicenseUrl(licenseUrl, out licenseName))
+
+            if (IsLicenseUrl(licenseUrl, out string licenseName))
             {
-                return true;
+                licenses.Add(new License(licenseName, "Specified license URL in package specifications"));
             }
+
             if (licenseUrl.StartsWith(githubUrl))
             {
                 licenseUrl = getPlainTextUrl(licenseUrl);
             }
-            HttpResponseMessage resp= client.GetAsync(licenseUrl).Result;
-            if (resp.IsSuccessStatusCode && resp.Content.Headers.ContentType.MediaType == "text/plain")
+            HttpResponseMessage resp = client.GetAsync(licenseUrl).Result;
+            if (resp.IsSuccessStatusCode)
             {
                 string licenseContent = resp.Content.ReadAsStringAsync().Result;
-                if(FindLicenseNameInFile(licenseContent, out licenseName) || FindLicenseUrlInFile(licenseContent, out licenseName))
+                if (FindLicenseNameInFile(licenseContent, out licenseName) || FindLicenseUrlInFile(licenseContent, out licenseName))
                 {
-                    return true;
+                    string source = $"Found license name or url in {licenseUrl}";
+                    License license = licenses.Find(l => licenseName == l.Title);
+                    if(license == null)
+                    {
+                        licenses.Add(new License(licenseName, source));
+                    }
+                    else
+                    {
+                        license.AddSource(source);
+                    }
                 }
             }
+
             string projectUrl = package.ProjectUrl;
-            if (projectUrl.StartsWith(githubUrl) && FindLicenseInGithubRepo(projectUrl, out licenseName))
+            if (IsGithubProject(projectUrl) && FindLicenseInGithubRepo(projectUrl, out licenseName))
             {
-                return true;
+                string source = $"Specified license in Github project: {projectUrl}";
+                License license = licenses.Find(l => licenseName == l.Title);
+                if (license == null)
+                {
+                    licenses.Add(new License(licenseName, source));
+                }
+                else
+                {
+                    license.AddSource(source);
+                }
             }
-            return false;
+
+            return licenses;
         }
 
         private static bool IsLicenseUrl(string licenseUrl, out string licenseName)
@@ -84,6 +108,11 @@ namespace DotnetDependencyAnalyzer.Licenses
                 }
             }
             return false;
+        }
+
+        private static bool IsGithubProject(string projectUrl)
+        {
+            return projectUrl.StartsWith(githubUrl);
         }
 
         private static bool FindLicenseInGithubRepo(string projectUrl, out string licenseName)
