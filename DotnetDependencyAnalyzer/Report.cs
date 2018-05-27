@@ -19,15 +19,23 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("description")]
         public string Description { get; set; }
 
+        [JsonProperty("timestamp")]
+        public string Timestamp { get; set; }
+
+        [JsonProperty("build_tag")]
+        public string BuildTag { get; set; }
+
         [JsonProperty("dependencies")]
         public List<Dependency> Dependencies { get; set; }
 
-        public Report(string id, string version, string name, string description)
+        public Report(string id, string version, string name, string description, string timestamp, string buildTag)
         {
             Id = id;
             Version = version;
             Name = name;
             Description = description;
+            Timestamp = timestamp;
+            BuildTag = buildTag;
         }
     }
 
@@ -36,54 +44,53 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("title")]
         public string Title { get; set; }
 
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
         [JsonProperty("main_version")]
         public string MainVersion { get; set; }
 
-        /*[JsonProperty("private_versions")]
-        public List<string> PrivateVersions { get; set; }*/
+        [JsonProperty("vulnerabilities_count")]
+        public int VulnerabilitiesCount { get; set; }
 
-        [JsonProperty("license")]
-        public List<License> License { get; set; }
-
-        /*[JsonProperty("hierarchy")]
-        public List<Dependency> Hierarchy { get; set; }*/
+        [JsonProperty("licenses")]
+        public List<License> Licenses { get; set; }
 
         [JsonProperty("vulnerabilities")]
         public List<Vulnerability> Vulnerabilities { get; set; }
 
-        public Dependency(string title, string mainVersion)
+        public Dependency(string title, string mainVersion, string description, int vulnerabilitiesCount)
         {
             Title = title;
             MainVersion = mainVersion;
-            License = new List<License>();
-            Vulnerabilities = new List<Vulnerability>();
+            Description = description;
+            VulnerabilitiesCount = vulnerabilitiesCount;
+            Licenses = new List<License>();
         }
     }
 
     [Serializable]
     public class License
     {
-        [JsonProperty("title")]
+        [JsonProperty("spdx_id")]
         public string Title { get; set; }
 
-        [JsonProperty("origins")]
-        public List<string> Sources { get; set; }
+        [JsonProperty("source")]
+        public string Source { get; set; }
 
         public License(string name, string source)
         {
             Title = name;
-            Sources = new List<string>{source};
-        }
-
-        public void AddSource(string source)
-        {
-            Sources.Add(source);
+            Source = source;
         }
     }
 
     [Serializable]
     public class Vulnerability
     {
+        [JsonProperty("id")]
+        public long Id { get; set; }
+
         [JsonProperty("title")]
         public string Title { get; set; }
 

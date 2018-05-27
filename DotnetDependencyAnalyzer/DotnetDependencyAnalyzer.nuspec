@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>DotnetDependencyAnalyzer</id>
-    <version>1.2.0-alpha5</version>
+    <version>1.2.0-beta</version>
     <title>.NET Dependency Analyzer</title>
     <authors>Hugo Rocha</authors>
     <owners>$pt-osda</owners>
@@ -10,18 +10,16 @@
     <projectUrl>https://github.com/pt-osda/dotnet-dependency-analyzer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Analyzes dependencies, concerning their licenses and vulnerabilities, used in projects developed in .NET platform</description>
-    <releaseNotes>Reads license url from packages and evaluates packages according to their vulnerabilities.</releaseNotes>
+    <releaseNotes>Reads license url from packages and evaluates packages according to their vulnerabilities. Generates report and stores it on a database.</releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>Dotnet Plugin Vulnerabilities Licenses</tags>
+	<dependencies>
+		<dependency id="NuGet.Packaging" version="4.5.0" />
+		<dependency id="Newtonsoft.Json" version="9.0.1" />
+	</dependencies>
   </metadata>
   <files>
-	<file src="DependencyAnalyzer.exe" target="content/DependencyAnalyzer.exe" />
+	<file src="..\DependencyAnalyzer.exe" target="tools/DependencyAnalyzer.exe" />
     <file src="bin\Release\DotnetDependencyAnalyzer.exe" target="lib\DotnetDependencyAnalyzer.exe" />
-    <file src="bin\Release\NuGet.Common.dll" target="lib\NuGet.Common.dll" />
-    <file src="bin\Release\Newtonsoft.Json.dll" target="lib\Newtonsoft.Json.dll" />
-    <file src="bin\Release\NuGet.Versioning.dll" target="lib\NuGet.Versioning.dll" />
-    <file src="bin\Release\NuGet.Packaging.dll" target="lib\NuGet.Packaging.dll" />
-    <file src="bin\Release\NuGet.Packaging.Core.dll" target="lib\NuGet.Packaging.Core.dll" />
-    <file src="bin\Release\NuGet.Frameworks.dll" target="lib\NuGet.Frameworks.dll" />
   </files>
 </package>

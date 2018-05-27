@@ -14,7 +14,8 @@ namespace DotnetDependencyAnalyzer.PackageUtils
                 Id = packageReader.GetId(),
                 Version = packageReader.GetVersion().OriginalVersion,
                 LicenseUrl = packageReader.GetLicenseUrl(),
-                ProjectUrl = packageReader.GetProjectUrl()
+                ProjectUrl = packageReader.GetProjectUrl(),
+                Description = packageReader.GetDescription()
             };
         }
 
