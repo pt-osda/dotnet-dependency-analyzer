@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Linq;
 using DotnetDependencyAnalyzer.Licenses;
 using DotnetDependencyAnalyzer.PackageUtils;
@@ -20,13 +19,14 @@ namespace DotnetDependencyAnalyzer
         private static string projectPath;
 
         private static readonly string pluginId = "DotnetDependencyAnalyzer";
-        
-        private static readonly string reportAPIUrl = "http://localhost:8080/report";
-        private static readonly HttpClient client = new HttpClient();
+
+        private static readonly string reportAPIUrl = /*"http://35.234.147.77/report"*/    "http://localhost:8080/report";
+
+        public static HttpClient Client { get; } = new HttpClient();
 
         public static void Main(string[] args)
         {
-            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            DateTime startTime = DateTime.UtcNow;
             Console.WriteLine("Plugin is running... ");
             projectPath = "./" + args[0];
             DirectoryInfo projectDir = new DirectoryInfo(projectPath);
@@ -38,7 +38,7 @@ namespace DotnetDependencyAnalyzer
                 List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
                                                 .Where(package => package.Id != pluginId)
                                                 .ToList();
-                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound);
+                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound).Result;
                 string report = GenerateReport(dependenciesEvaluated, projectDir.Name);
                 Console.WriteLine("Produced report locally.");
                 StoreReport(report);
@@ -47,31 +47,40 @@ namespace DotnetDependencyAnalyzer
             {
                 Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
             }
+            double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
+            Console.WriteLine("Plugin execution time: " + seconds);
         }
 
-        private static List<Dependency> ValidateProjectDependencies(List<NuGetPackage> packages)
+        private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages)
         {
             List<Dependency> dependencies = new List<Dependency>();
-            VulnerabilityEvaluationResult[] vulnerabilityEvaluation = VulnerabilityEvaluation.EvaluatePackage(packages);
 
-            Task<List<License>>[] findLicenseTasks = new Task<List<License>>[packages.Count];
+            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages);
+
+            List<License>[] dependenciesLicenses = new List<License>[packages.Count];
             int i = 0;
-            foreach (NuGetPackage package in packages)
+            foreach(NuGetPackage package in packages)
             {
                 String packageDir = $"{package.Id}.{package.Version}";
                 PackageInfo packageInfo = PackageManager.GetPackageInfo(Path.Combine(projectPath, packagesPath, packageDir));
-                dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description, vulnerabilityEvaluation[i].VulnerabilitiesNumber)
+                dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description));
+                try
                 {
-                    Vulnerabilities = vulnerabilityEvaluation[i].VulnerabilitiesFound ?? new List<Vulnerability>()
-                });
-                findLicenseTasks[i++] = Task.Factory.StartNew(() => LicenseManager.TryGetLicenseName(packageInfo));
+                    dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo);
+                }
+                catch (Exception) {
+                    dependenciesLicenses[i] = new List<License>();
+                }
+                ++i;
             }
 
-            Task.WaitAll(findLicenseTasks);
             i = 0;
-            foreach (Task<List<License>> task in findLicenseTasks)
+            foreach (List<License> licenses in dependenciesLicenses)
             {
-                dependencies[i++].Licenses = task.Result;
+                dependencies[i].Licenses = licenses;
+                dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
+                dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
+                ++i;
             }
 
             return dependencies;
@@ -79,7 +88,8 @@ namespace DotnetDependencyAnalyzer
 
         private static string GenerateReport(List<Dependency> dependenciesEvaluated, string projectName)
         {
-            Report report = new Report("Id", "1.0.0", projectName, "Report", DateTime.Now.ToString("yyyyMMddHHmmssffff"), "Build Tag")
+            string dateTime = string.Concat(DateTime.UtcNow.ToString("s"), "Z");
+            Report report = new Report("Id", "1.0.0", projectName, "Report", dateTime, "Build Tag")
             {
                 Dependencies = dependenciesEvaluated
             };
@@ -90,17 +100,14 @@ namespace DotnetDependencyAnalyzer
 
         private static void StoreReport(string report)
         {
-            using (var client = new HttpClient())
+            var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
+            if (result.IsSuccessStatusCode)
             {
-                var result = client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
-                if (result.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("Report stored with success");
-                }
-                else
-                {
-                    Console.WriteLine("An error during Report storage");
-                }
+                Console.WriteLine("Report stored with success");
+            }
+            else
+            {
+                Console.WriteLine("An error during Report storage");
             }
         }
     }

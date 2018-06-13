@@ -59,12 +59,11 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("vulnerabilities")]
         public List<Vulnerability> Vulnerabilities { get; set; }
 
-        public Dependency(string title, string mainVersion, string description, int vulnerabilitiesCount)
+        public Dependency(string title, string mainVersion, string description)
         {
             Title = title;
             MainVersion = mainVersion;
             Description = description;
-            VulnerabilitiesCount = vulnerabilitiesCount;
             Licenses = new List<License>();
         }
     }

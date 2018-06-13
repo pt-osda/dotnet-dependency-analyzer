@@ -2,15 +2,15 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DotnetDependencyAnalyzer.Licenses
 {
     public class LicenseManager
     {
-        private static readonly HttpClient client = new HttpClient();
         private static readonly string proxyUrl = "http://localhost:8080/nuget/dependency/{0}/{1}/licenses?licenseUrl={2}";
 
-        public static List<License> TryGetLicenseName(PackageInfo package)
+        public static async Task<List<License>> TryGetLicenseName(PackageInfo package)
         {
             List<License> licenses = new List<License>();
             string licenseUrl = package.LicenseUrl;
@@ -21,11 +21,8 @@ namespace DotnetDependencyAnalyzer.Licenses
                 return licenses;
             }
 
-            /*if (licenseUrl.StartsWith(githubUrl))
-            {
-                licenseUrl = getPlainTextUrl(licenseUrl);
-            }*/
-            HttpResponseMessage resp = client.GetAsync(string.Format(proxyUrl, package.Id, package.Version,licenseUrl)).Result;
+            HttpClient httpClient = DependencyAnalyzer.Client;
+            HttpResponseMessage resp = await httpClient.GetAsync(string.Format(proxyUrl, package.Id, package.Version,licenseUrl));
             if (resp.IsSuccessStatusCode)
             {
                 string content = resp.Content.ReadAsStringAsync().Result;
@@ -45,13 +42,6 @@ namespace DotnetDependencyAnalyzer.Licenses
                 return true;
             }
             return false;
-        }
-
-        private static string getPlainTextUrl(string githubUrl)
-        {
-            return githubUrl
-                .Replace("github", "raw.githubusercontent")
-                .Replace("/blob", "");
         }
     }
 }
