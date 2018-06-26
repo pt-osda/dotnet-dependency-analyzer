@@ -72,6 +72,7 @@
     <Compile Include="PackageUtils\PackageInfo.cs" />
     <Compile Include="PackageUtils\PackageLoader.cs" />
     <Compile Include="PackageUtils\PackageManager.cs" />
+    <Compile Include="ProjectPolicy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
     <Compile Include="Vulnerabilities\VulnerabilityEvaluation.cs" />

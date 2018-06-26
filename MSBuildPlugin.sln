@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotnetDependencyAnalyzer", "DotnetDependencyAnalyzer\DotnetDependencyAnalyzer.csproj", "{FC84B0DA-6349-46A2-B86A-A3D9B4D65778}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetDependencyAnalyzer.NetCore", "DotnetDependencyAnalyzer.NetCore\DotnetDependencyAnalyzer.NetCore.csproj", "{D78932C7-7419-4425-B9E9-FEF4E8FECC6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FC84B0DA-6349-46A2-B86A-A3D9B4D65778}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC84B0DA-6349-46A2-B86A-A3D9B4D65778}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC84B0DA-6349-46A2-B86A-A3D9B4D65778}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D78932C7-7419-4425-B9E9-FEF4E8FECC6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D78932C7-7419-4425-B9E9-FEF4E8FECC6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D78932C7-7419-4425-B9E9-FEF4E8FECC6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D78932C7-7419-4425-B9E9-FEF4E8FECC6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

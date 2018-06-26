@@ -1,10 +1,10 @@
-﻿using DotnetDependencyAnalyzer.PackageUtils;
+﻿using DotnetDependencyAnalyzer.NetCore.PackageUtils;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace DotnetDependencyAnalyzer.Licenses
+namespace DotnetDependencyAnalyzer.NetCore.Licenses
 {
     public class LicenseManager
     {

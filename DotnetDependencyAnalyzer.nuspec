@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package >
+  <metadata minClientVersion="3.2">
+    <id>DotnetDependencyAnalyzer</id>
+    <version>1.3.0-alpha3</version>
+    <title>.NET Dependency Analyzer</title>
+    <authors>Hugo Rocha</authors>
+    <owners>$pt-osda</owners>
+    <licenseUrl>https://opensource.org/licenses/BSD-3-Clause</licenseUrl>
+    <projectUrl>https://github.com/pt-osda/dotnet-dependency-analyzer</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Analyzes dependencies, concerning their licenses and vulnerabilities, used in projects developed in .NET platform, including .NET Core.</description>
+    <releaseNotes>Reads license url from packages and evaluates packages according to their vulnerabilities. Generates report and stores it on a database.</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>Dotnet Plugin Vulnerabilities Licenses</tags>
+	<dependencies>
+		<dependency id="NuGet.Packaging" version="4.5.0" />
+		<dependency id="Newtonsoft.Json" version="9.0.1" />
+	</dependencies>
+  </metadata>
+  <files>
+	<file src="DotnetDependencyAnalyzer.NetCore\DependencyAnalyzer.NetCore.ps1" target="content\netcoreapp2.0\DependencyAnalyzer.ps1" />
+	<file src="DotnetDependencyAnalyzer.NetCore\DependencyAnalyzer.NetCore.exe" target="content\netcoreapp2.0\DependencyAnalyzer.exe" /> 
+	<file src="DotnetDependencyAnalyzer.NetCore\bin\Debug\netcoreapp2.0\publish\**" target="content\netcoreapp2.0\DependencyAnalyzer" />
+    
+	<file src="DependencyAnalyzer.ps1" target="content\net45\DependencyAnalyzer.ps1" />
+	<file src="DependencyAnalyzer.exe" target="content\net45\DependencyAnalyzer.exe" /> 
+	<file src="DotnetDependencyAnalyzer\bin\Release\DotnetDependencyAnalyzer.exe" target="lib\net45\DotnetDependencyAnalyzer.exe" />
+  </files>
+</package>

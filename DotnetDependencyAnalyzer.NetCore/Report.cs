@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DotnetDependencyAnalyzer
+namespace DotnetDependencyAnalyzer.NetCore
 {
     [Serializable]
     public class Report

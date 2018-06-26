@@ -2,21 +2,24 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using DotnetDependencyAnalyzer.Licenses;
-using DotnetDependencyAnalyzer.PackageUtils;
-using DotnetDependencyAnalyzer.Vulnerabilities;
+using DotnetDependencyAnalyzer.NetCore.Licenses;
+using DotnetDependencyAnalyzer.NetCore.PackageUtils;
+using DotnetDependencyAnalyzer.NetCore.Vulnerabilities;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
+using System.Xml.Serialization;
 
-namespace DotnetDependencyAnalyzer
+namespace DotnetDependencyAnalyzer.NetCore
 {
     public class DependencyAnalyzer
     {
-        private static readonly string packagesFile = "packages.config";
-        private static readonly string packagesPath = "../packages";
+        private static readonly string projectFile = "{0}.csproj";
+        private static readonly string nugetPropsFile = "./obj/{0}.csproj.nuget.g.props";
         private static string projectPath;
+        private static string packagesRootPath;
+        private static string projectAssetsPath;
 
         private static readonly string pluginId = "DotnetDependencyAnalyzer";
 
@@ -27,36 +30,48 @@ namespace DotnetDependencyAnalyzer
         public static void Main(string[] args)
         {
             DateTime startTime = DateTime.UtcNow;
-            Console.WriteLine("Plugin is running... ");
-            projectPath = "./" + args[0];
-            DirectoryInfo projectDir = new DirectoryInfo(projectPath);
-            Console.WriteLine($"Project Name: {projectDir.Name}");
+            RetrieveNugetProperties(string.Format(nugetPropsFile, args[0]));
+            Console.WriteLine(packagesRootPath);
+            projectPath = "./";
+            string projectName = args[0];
+            Console.WriteLine($"Project Name: {projectName}");
+            string projectFilePath = Path.Combine(projectPath, string.Format(projectFile, projectName));
 
-            string[] osdaFiles = Directory.GetFiles(projectDir.FullName, "*.osda");
-            if(osdaFiles.Length == 0)
+            string[] osdaFiles = Directory.GetFiles(projectPath, "*.osda");
+            if (osdaFiles.Length == 0)
             {
                 Console.WriteLine("Canceled Report. This project does not contain a policy file (.osda)");
                 return;
             }
             ProjectPolicy policy = JsonConvert.DeserializeObject<ProjectPolicy>(File.ReadAllText(osdaFiles[0]));
 
-            string nugetFile = Path.Combine(projectDir.FullName, packagesFile);
-            if (File.Exists(nugetFile))
+            if (File.Exists(projectFilePath))
             {
-                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
+                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(projectFilePath)
                                                 .Where(package => package.Id != pluginId)
                                                 .ToList();
                 List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound).Result;
-                string report = GenerateReport(dependenciesEvaluated, projectDir.Name, policy);
+                string report = GenerateReport(dependenciesEvaluated, projectName, policy);
                 Console.WriteLine("Produced report locally.");
                 StoreReport(report);
             }
             else
             {
-                Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
+                Console.WriteLine($"Packages.config file not found in project {projectName}");
             }
             double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
             Console.WriteLine("Plugin execution time: " + seconds);
+        }
+
+        private static void RetrieveNugetProperties(string propertiesFileDir)
+        {
+            var serializer = new XmlSerializer(typeof(NuGetProperties));
+            using (var stream = File.OpenRead(propertiesFileDir))
+            {
+                NuGetProperties props = (NuGetProperties) serializer.Deserialize(stream);
+                packagesRootPath = props.PropertyGroup[0].NuGetPackageRoot.Value.Replace("$(UserProfile)", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+                projectAssetsPath = props.PropertyGroup[0].ProjectAssetsFile.Value;
+            }
         }
 
         private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages)
@@ -69,8 +84,7 @@ namespace DotnetDependencyAnalyzer
             int i = 0;
             foreach(NuGetPackage package in packages)
             {
-                String packageDir = $"{package.Id}.{package.Version}";
-                PackageInfo packageInfo = PackageManager.GetPackageInfo(Path.Combine(projectPath, packagesPath, packageDir));
+                PackageInfo packageInfo = PackageManager.GetPackageInfo(packagesRootPath, package.Id, package.Version);
                 dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description));
                 try
                 {
