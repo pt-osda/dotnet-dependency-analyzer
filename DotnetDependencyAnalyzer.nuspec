@@ -23,8 +23,8 @@
 	<file src="DotnetDependencyAnalyzer.NetCore\DependencyAnalyzer.NetCore.exe" target="content\netcoreapp2.0\DependencyAnalyzer.exe" /> 
 	<file src="DotnetDependencyAnalyzer.NetCore\bin\Debug\netcoreapp2.0\publish\**" target="content\netcoreapp2.0\DependencyAnalyzer" />
     
-	<file src="DependencyAnalyzer.ps1" target="content\net45\DependencyAnalyzer.ps1" />
-	<file src="DependencyAnalyzer.exe" target="content\net45\DependencyAnalyzer.exe" /> 
+	<file src="DotnetDependencyAnalyzer\DependencyAnalyzer.ps1" target="content\net45\DependencyAnalyzer.ps1" />
+	<file src="DotnetDependencyAnalyzer\DependencyAnalyzer.exe" target="content\net45\DependencyAnalyzer.exe" /> 
 	<file src="DotnetDependencyAnalyzer\bin\Release\DotnetDependencyAnalyzer.exe" target="lib\net45\DotnetDependencyAnalyzer.exe" />
   </files>
 </package>
