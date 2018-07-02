@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata minClientVersion="3.3">
+    <id>DotnetDependencyAnalyzer.NetCore</id>
+    <version>0.3.0</version>
+	<title>.NET Core Dependency Analyzer</title>
+    <authors>Hugo Rocha</authors>
+    <owners>$pt-osda</owners>
+    <licenseUrl>https://opensource.org/licenses/BSD-3-Clause</licenseUrl>
+    <projectUrl>https://github.com/pt-osda/dotnet-dependency-analyzer</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Analyzes dependencies, concerning their licenses and vulnerabilities, used in projects developed in .NET Core. For .NET Classic projects, install this package https://www.nuget.org/packages/DotnetDependencyAnalyzer.</description>
+    <releaseNotes>Reads license url from packages and evaluates packages according to their vulnerabilities. Generates report and stores it on a database.</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>Dotnet Core Plugin Vulnerabilities Licenses</tags>
+    <dependencies>
+      <group targetFramework=".NETCoreApp2.0">
+        <dependency id="Microsoft.NETCore.App" version="2.0.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="9.0.1" exclude="Build,Analyzers" />
+        <dependency id="Nuget.Packaging" version="4.5.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+	<contentFiles>
+	  <files include="any\netcoreapp2.0\DependencyAnalyzer\*" buildAction="Content" copyToOutput="true"/>
+	</contentFiles>
+  </metadata>
+  <files>
+	<file src="bin\Debug\netcoreapp2.0\publish\*" target="contentFiles\any\netcoreapp2.0\DependencyAnalyzer" />
+	<file src=".\plugin-scripts\DependencyAnalyzer.NetCore.exe" target="contentFiles\any\netcoreapp2.0\DependencyAnalyzer" />
+	<file src=".\plugin-scripts\DependencyAnalyzer.NetCore.ps1" target="contentFiles\any\netcoreapp2.0\DependencyAnalyzer" />
+	<file src=".\plugin-scripts\Setup.exe" target="contentFiles\any\netcoreapp2.0\DependencyAnalyzer" />
+  </files>
+</package>

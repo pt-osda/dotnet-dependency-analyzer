@@ -17,11 +17,11 @@ namespace DotnetDependencyAnalyzer.NetCore
     {
         private static readonly string projectFile = "{0}.csproj";
         private static readonly string nugetPropsFile = "./obj/{0}.csproj.nuget.g.props";
-        private static string projectPath;
+        private static readonly string projectPath = "./";
         private static string packagesRootPath;
         private static string projectAssetsPath;
 
-        private static readonly string pluginId = "DotnetDependencyAnalyzer";
+        private static readonly string pluginId = "DotnetDependencyAnalyzer.NetCore";
 
         private static readonly string reportAPIUrl = "http://35.234.147.77/report";
 
@@ -30,9 +30,8 @@ namespace DotnetDependencyAnalyzer.NetCore
         public static void Main(string[] args)
         {
             DateTime startTime = DateTime.UtcNow;
+			Console.WriteLine("Plugin is running... ");
             RetrieveNugetProperties(string.Format(nugetPropsFile, args[0]));
-            Console.WriteLine(packagesRootPath);
-            projectPath = "./";
             string projectName = args[0];
             Console.WriteLine($"Project Name: {projectName}");
             string projectFilePath = Path.Combine(projectPath, string.Format(projectFile, projectName));
