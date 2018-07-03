@@ -89,6 +89,9 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("source")]
         public string Source { get; set; }
 
+        [JsonProperty("valid")]
+        public bool Valid { get; set; }
+
         public License(string name, string source)
         {
             Title = name;

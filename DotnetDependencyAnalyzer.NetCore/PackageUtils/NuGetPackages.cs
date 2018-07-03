@@ -25,5 +25,20 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
 
         [XmlAttribute(AttributeName = "Version")]
         public string Version { get; set; }
+
+        public bool Direct { get; set; }
+
+        public List<string> Children { get; set; } = new List<string>();
+
+        public override bool Equals(object obj)
+        {
+            NuGetPackage package = (NuGetPackage) obj;
+            return package.Id == Id && package.Version == Version;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { Id, Version }.GetHashCode();
+        }
     }
 }

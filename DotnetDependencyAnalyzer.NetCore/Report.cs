@@ -70,13 +70,17 @@ namespace DotnetDependencyAnalyzer.NetCore
         [JsonProperty("direct")]
         public bool Direct { get; set; }
 
-        public Dependency(string title, string mainVersion, string description)
+        [JsonProperty("children")]
+        public List<string> Children { get; set; }
+
+        public Dependency(string title, string mainVersion, string description, bool direct, List<string> children)
         {
             Title = title;
             MainVersion = mainVersion;
             Description = description;
             Licenses = new List<License>();
-            Direct = true;
+            Direct = direct;
+            Children = children;
         }
     }
 
@@ -88,6 +92,9 @@ namespace DotnetDependencyAnalyzer.NetCore
 
         [JsonProperty("source")]
         public string Source { get; set; }
+
+        [JsonProperty("valid")]
+        public bool Valid { get; set; }
 
         public License(string name, string source)
         {

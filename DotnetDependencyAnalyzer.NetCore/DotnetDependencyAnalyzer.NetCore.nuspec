@@ -17,7 +17,7 @@
       <group targetFramework=".NETCoreApp2.0">
         <dependency id="Microsoft.NETCore.App" version="2.0.0" exclude="Build,Analyzers" />
         <dependency id="Newtonsoft.Json" version="9.0.1" exclude="Build,Analyzers" />
-        <dependency id="Nuget.Packaging" version="4.5.0" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Packaging" version="4.5.0" exclude="Build,Analyzers" />
       </group>
     </dependencies>
 	<contentFiles>

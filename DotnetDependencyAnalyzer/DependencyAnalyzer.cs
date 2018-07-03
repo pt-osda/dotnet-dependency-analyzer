@@ -46,7 +46,7 @@ namespace DotnetDependencyAnalyzer
                 List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
                                                 .Where(package => package.Id != pluginId)
                                                 .ToList();
-                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound).Result;
+                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
                 string report = GenerateReport(dependenciesEvaluated, projectDir.Name, policy);
                 Console.WriteLine("Produced report locally.");
                 StoreReport(report);
@@ -59,7 +59,7 @@ namespace DotnetDependencyAnalyzer
             Console.WriteLine("Plugin execution time: " + seconds);
         }
 
-        private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages)
+        private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages, ProjectPolicy policy)
         {
             List<Dependency> dependencies = new List<Dependency>();
 
@@ -85,7 +85,12 @@ namespace DotnetDependencyAnalyzer
             i = 0;
             foreach (List<License> licenses in dependenciesLicenses)
             {
-                dependencies[i].Licenses = licenses;
+                dependencies[i].Licenses = licenses.Select(license =>
+                    {
+                        license.Valid = !policy.InvalidLicenses.Contains(license.Title);
+                        return license;
+                    })
+                    .ToList();
                 dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
                 dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
                 ++i;

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 
 namespace DotnetDependencyAnalyzer
 {
@@ -28,10 +29,7 @@ namespace DotnetDependencyAnalyzer
         public string RepoOwner { get; set; }
 
         [JsonProperty("invalid_licenses")]
-        public string [] InvalidLicenses { get; set; }
-
-        [JsonProperty("plugin_cache_time")]
-        public int PluginCacheTime { get; set; }
+        public List<string> InvalidLicenses { get; set; }
 
         [JsonProperty("api_cache_time")]
         public int ApiCacheTime { get; set; }

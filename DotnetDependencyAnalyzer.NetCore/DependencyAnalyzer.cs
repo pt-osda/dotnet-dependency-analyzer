@@ -21,8 +21,6 @@ namespace DotnetDependencyAnalyzer.NetCore
         private static string packagesRootPath;
         private static string projectAssetsPath;
 
-        private static readonly string pluginId = "DotnetDependencyAnalyzer.NetCore";
-
         private static readonly string reportAPIUrl = "http://35.234.147.77/report";
 
         public static HttpClient Client { get; } = new HttpClient();
@@ -46,10 +44,10 @@ namespace DotnetDependencyAnalyzer.NetCore
 
             if (File.Exists(projectFilePath))
             {
-                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(projectFilePath)
-                                                .Where(package => package.Id != pluginId)
+                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(projectFilePath, projectAssetsPath)
+                                                .Distinct()
                                                 .ToList();
-                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound).Result;
+                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
                 string report = GenerateReport(dependenciesEvaluated, projectName, policy);
                 Console.WriteLine("Produced report locally.");
                 StoreReport(report);
@@ -73,7 +71,7 @@ namespace DotnetDependencyAnalyzer.NetCore
             }
         }
 
-        private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages)
+        private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages, ProjectPolicy policy)
         {
             List<Dependency> dependencies = new List<Dependency>();
 
@@ -84,7 +82,7 @@ namespace DotnetDependencyAnalyzer.NetCore
             foreach(NuGetPackage package in packages)
             {
                 PackageInfo packageInfo = PackageManager.GetPackageInfo(packagesRootPath, package.Id, package.Version);
-                dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description));
+                dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description, package.Direct, package.Children));
                 try
                 {
                     dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo);
@@ -98,7 +96,12 @@ namespace DotnetDependencyAnalyzer.NetCore
             i = 0;
             foreach (List<License> licenses in dependenciesLicenses)
             {
-                dependencies[i].Licenses = licenses;
+                dependencies[i].Licenses = licenses.Select(license =>
+                    {
+                        license.Valid = !policy.InvalidLicenses.Contains(license.Title);
+                        return license;
+                    })
+                    .ToList();
                 dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
                 dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
                 ++i;
