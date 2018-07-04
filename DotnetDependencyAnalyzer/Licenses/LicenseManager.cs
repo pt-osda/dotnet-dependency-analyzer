@@ -1,7 +1,9 @@
 ﻿using DotnetDependencyAnalyzer.PackageUtils;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace DotnetDependencyAnalyzer.Licenses
@@ -10,7 +12,7 @@ namespace DotnetDependencyAnalyzer.Licenses
     {
         private static readonly string proxyUrl = "http://35.234.147.77/nuget/dependency/{0}/{1}/licenses?licenseUrl={2}";
 
-        public static async Task<List<License>> TryGetLicenseName(PackageInfo package)
+        public static async Task<List<License>> TryGetLicenseName(PackageInfo package, int maxAge)
         {
             List<License> licenses = new List<License>();
             string licenseUrl = package.LicenseUrl;
@@ -22,7 +24,9 @@ namespace DotnetDependencyAnalyzer.Licenses
             }
 
             HttpClient httpClient = DependencyAnalyzer.Client;
-            HttpResponseMessage resp = await httpClient.GetAsync(string.Format(proxyUrl, package.Id, package.Version,licenseUrl));
+            HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, string.Format(proxyUrl, package.Id, package.Version, licenseUrl));
+            req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
+            HttpResponseMessage resp = await httpClient.SendAsync(req);
             if (resp.IsSuccessStatusCode)
             {
                 string content = resp.Content.ReadAsStringAsync().Result;

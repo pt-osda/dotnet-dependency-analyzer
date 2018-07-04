@@ -63,7 +63,7 @@ namespace DotnetDependencyAnalyzer
         {
             List<Dependency> dependencies = new List<Dependency>();
 
-            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages);
+            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
 
             List<License>[] dependenciesLicenses = new List<License>[packages.Count];
             int i = 0;
@@ -74,7 +74,7 @@ namespace DotnetDependencyAnalyzer
                 dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description));
                 try
                 {
-                    dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo);
+                    dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo, policy.ApiCacheTime);
                 }
                 catch (Exception) {
                     dependenciesLicenses[i] = new List<License>();
