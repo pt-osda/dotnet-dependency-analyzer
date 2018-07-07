@@ -10,6 +10,12 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
     {
         private static readonly string assetsDependency = "{0}/{1}";
 
+        /// <summary>
+        /// Loads direct dependencies from .csproj file and indirect dependencies from assets.json file.
+        /// </summary>
+        /// <param name="path">Path to .csproj file.</param>
+        /// <param name="assetsFilePath">Path to assets.json file.</param>
+        /// <returns></returns>
         public static List<NuGetPackage> LoadPackages(string path, string assetsFilePath)
         {
             using (var stream = File.OpenRead(path))
@@ -21,9 +27,6 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
 
                 // get direct dependencies
                 List<NuGetPackage> packages = LoadPackages(stream)
-                    .Where(package => package.Id != "DotnetDependencyAnalyzer.NetCore")
-                    .ToList();
-                packages = packages
                     .Select(package =>
                     {
                         package.Direct = true;
@@ -48,6 +51,11 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
             }
         }
 
+        /// <summary>
+        /// Loads packages from cs.proj file.
+        /// </summary>
+        /// <param name="path">Stream of packages file.</param>
+        /// <returns></returns>
         private static List<NuGetPackage> LoadPackages(Stream packageConfig)
         {
             var serializer = new XmlSerializer(typeof(Project));
@@ -55,6 +63,11 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
             return prj.ItemGroup.Packages;
         }
 
+        /// <summary>
+        /// Retrieves all child dependencies of a given dependency.
+        /// </summary>
+        /// <param name="dependency">JToken object that represents a dependency in assets file.</param>
+        /// <returns></returns>
         private static List<string> GetChildren(JToken dependency)
         {
             List<string> deps = new List<string>();
@@ -71,6 +84,12 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
             return deps;
         }
 
+        /// <summary>
+        /// Gets recursively every indirect dependencies related to a direct dependency.
+        /// </summary>
+        /// <param name="children">Child dependencies of a direct dependency.</param>
+        /// <param name="dependencies">JToken object that represents every dependencies in assets file.</param>
+        /// <returns></returns>
         private static List<NuGetPackage> GetIndirectDependencies(List<string> children, JToken dependencies)
         {
             List<NuGetPackage> deps = new List<NuGetPackage>();

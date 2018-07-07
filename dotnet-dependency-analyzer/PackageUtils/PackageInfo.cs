@@ -1,5 +1,5 @@
 ﻿
-namespace DotnetDependencyAnalyzer.PackageUtils
+namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
 {
     /// <summary>
     /// Package information obtained from .nuspec file.

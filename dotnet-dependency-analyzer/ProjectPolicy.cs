@@ -28,6 +28,9 @@ namespace DotnetDependencyAnalyzer.NetCore
         [JsonProperty("repo_owner")]
         public string RepoOwner { get; set; }
 
+        [JsonProperty("admin")]
+        public string Admin { get; set; }
+
         [JsonProperty("invalid_licenses")]
         public List<string> InvalidLicenses { get; set; }
 

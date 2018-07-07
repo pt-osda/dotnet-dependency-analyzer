@@ -12,11 +12,21 @@ namespace DotnetDependencyAnalyzer.Licenses
     {
         private static readonly string proxyUrl = "http://35.234.147.77/nuget/dependency/{0}/{1}/licenses?licenseUrl={2}";
 
+        /// <summary>
+        /// Requests server proxy to get the license of a package.
+        /// </summary>
+        /// <param name="package">Package information.</param>
+        /// <param name="maxAge">Specifies the maximum of time a resource in proxy cache is considered valid.</param>
+        /// <returns></returns>
         public static async Task<List<License>> TryGetLicenseName(PackageInfo package, int maxAge)
         {
             List<License> licenses = new List<License>();
-            string licenseUrl = package.LicenseUrl;
+            if (!package.HasLicense())
+            {
+                return licenses;
+            }
 
+            string licenseUrl = package.LicenseUrl;
             if (IsLicenseUrl(licenseUrl, out string licenseName))
             {
                 licenses.Add(new License(licenseName, $"Specified license URL {licenseUrl} in package specifications"));
@@ -25,6 +35,7 @@ namespace DotnetDependencyAnalyzer.Licenses
 
             HttpClient httpClient = DependencyAnalyzer.Client;
             HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, string.Format(proxyUrl, package.Id, package.Version, licenseUrl));
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("OSDA_PROXY_TOKEN"));
             req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
             HttpResponseMessage resp = await httpClient.SendAsync(req);
             if (resp.IsSuccessStatusCode)
@@ -37,6 +48,12 @@ namespace DotnetDependencyAnalyzer.Licenses
             return licenses;
         }
 
+        /// <summary>
+        /// Checks if a given URL is related to a license.
+        /// </summary>
+        /// <param name="licenseUrl">A URL.</param>
+        /// <param name="licenseName">Out parameter that is affected with the license SPDX identifier if the given URL is related to a license.</param>
+        /// <returns> </returns>
         private static bool IsLicenseUrl(string licenseUrl, out string licenseName)
         {
             licenseName = null;

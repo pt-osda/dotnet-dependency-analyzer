@@ -31,10 +31,13 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("repo_owner")]
         public string RepoOwner { get; set; }
 
+        [JsonProperty("admin")]
+        public string Admin { get; set; }
+
         [JsonProperty("dependencies")]
         public List<Dependency> Dependencies { get; set; }
 
-        public Report(string id, string version, string name, string description, string timestamp, string organization, string repo, string repoOwner)
+        public Report(string id, string version, string name, string description, string timestamp, string organization, string repo, string repoOwner, string admin)
         {
             Id = id;
             Version = version;
@@ -44,6 +47,7 @@ namespace DotnetDependencyAnalyzer
             Organization = organization;
             Repo = repo;
             RepoOwner = repoOwner;
+            Admin = admin;
         }
     }
 

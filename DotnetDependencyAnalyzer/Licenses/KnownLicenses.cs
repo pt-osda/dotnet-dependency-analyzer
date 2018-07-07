@@ -4,6 +4,9 @@ namespace DotnetDependencyAnalyzer.Licenses
 {
     public class KnownLicenses
     {
+        /// <summary>
+        /// Map that associates a URL to the license SPDX identifier.
+        /// </summary>
         public static Dictionary<string, string> licensesUrl = new Dictionary<string, string>() {
             {"http://www.apache.org/licenses/LICENSE-1.1" ,"Apache-1.1" },
             {"http://www.apache.org/licenses/LICENSE-2.0" ,"Apache-2.0" },

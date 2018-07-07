@@ -17,7 +17,6 @@ namespace DotnetDependencyAnalyzer
         private static readonly string packagesFile = "packages.config";
         private static readonly string packagesPath = "../packages";
         private static string projectPath;
-
         private static readonly string pluginId = "DotnetDependencyAnalyzer";
 
         private static readonly string reportAPIUrl = "http://35.234.147.77/report";
@@ -28,35 +27,58 @@ namespace DotnetDependencyAnalyzer
         {
             DateTime startTime = DateTime.UtcNow;
             Console.WriteLine("Plugin is running... ");
-            projectPath = "./" + args[0];
+            projectPath = args[0];
             DirectoryInfo projectDir = new DirectoryInfo(projectPath);
             Console.WriteLine($"Project Name: {projectDir.Name}");
+            string nugetFile = Path.Combine(projectPath, packagesFile);
 
-            string[] osdaFiles = Directory.GetFiles(projectDir.FullName, "*.osda");
-            if(osdaFiles.Length == 0)
+            if (TryGetPolicy(out ProjectPolicy policy))
             {
-                Console.WriteLine("Canceled Report. This project does not contain a policy file (.osda)");
-                return;
+                if (File.Exists(nugetFile))
+                {
+                    List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
+                                                    .Where(package => package.Id != pluginId)
+                                                    .ToList();
+                    List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
+                    string report = GenerateReport(dependenciesEvaluated, projectDir.Name, policy);
+                    Console.WriteLine("Produced report locally.");
+                    StoreReport(report);
+                    double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
+                    Console.WriteLine("Plugin execution time: " + seconds);
+                }
+                else
+                {
+                    Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
+                }
             }
-            ProjectPolicy policy = JsonConvert.DeserializeObject<ProjectPolicy>(File.ReadAllText(osdaFiles[0]));
+        }
 
-            string nugetFile = Path.Combine(projectDir.FullName, packagesFile);
-            if (File.Exists(nugetFile))
+        private static bool TryGetPolicy(out ProjectPolicy policy)
+        {
+            string[] osdaFiles = Directory.GetFiles(projectPath, ".osda");
+            if (osdaFiles.Length == 0)
             {
-                List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
-                                                .Where(package => package.Id != pluginId)
-                                                .ToList();
-                List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
-                string report = GenerateReport(dependenciesEvaluated, projectDir.Name, policy);
-                Console.WriteLine("Produced report locally.");
-                StoreReport(report);
+                Console.WriteLine("Canceled Report. This project does not contain a policy file (.osda).");
+                policy = null;
+                return false;
             }
-            else
+            policy = JsonConvert.DeserializeObject<ProjectPolicy>(File.ReadAllText(osdaFiles[0]));
+            if (policy.Id == "")
             {
-                Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
+                Console.WriteLine("Canceled Report. Project id not specified in policy.");
+                return false;
             }
-            double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
-            Console.WriteLine("Plugin execution time: " + seconds);
+            if (policy.Name == "")
+            {
+                Console.WriteLine("Canceled Report. Project name not specified in policy.");
+                return false;
+            }
+            if(policy.Admin == "")
+            {
+                Console.WriteLine("Canceled Report. Project administrator name not specified in policy.");
+                return false;
+            }
+            return true;
         }
 
         private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages, ProjectPolicy policy)
@@ -102,7 +124,7 @@ namespace DotnetDependencyAnalyzer
         private static string GenerateReport(List<Dependency> dependenciesEvaluated, string projectName, ProjectPolicy policy)
         {
             string dateTime = string.Concat(DateTime.UtcNow.ToString("s"), "Z");
-            Report report = new Report(policy.Id, policy.Version, projectName, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner)
+            Report report = new Report(policy.Id, policy.Version, projectName, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner, policy.Admin)
             {
                 Dependencies = dependenciesEvaluated
             };
