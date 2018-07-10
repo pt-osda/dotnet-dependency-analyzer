@@ -65,6 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineUtils.cs" />
     <Compile Include="DependencyAnalyzer.cs" />
     <Compile Include="Licenses\LicenseManager.cs" />
     <Compile Include="Licenses\KnownLicenses.cs" />

@@ -28,30 +28,36 @@ namespace DotnetDependencyAnalyzer
 
         public static void Main(string[] args)
         {
+            CommandLineUtils.PrintLogo();
             DateTime startTime = DateTime.UtcNow;
-            Console.WriteLine("Plugin is running... ");
+            CommandLineUtils.PrintInfoMessage("Plugin is running... ");
             projectPath = args[0];
             DirectoryInfo projectDir = new DirectoryInfo(projectPath);
-            Console.WriteLine($"Project Name: {projectDir.Name}");
+            CommandLineUtils.PrintInfoMessage($"Project Name: {projectDir.Name}");
             string nugetFile = Path.Combine(projectPath, packagesFile);
 
             if (TryGetPolicy(out ProjectPolicy policy))
             {
                 if (File.Exists(nugetFile))
                 {
+                    CommandLineUtils.PrintInfoMessage("Finding project dependencies...  ");
                     List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(nugetFile)
                                                     .Where(package => package.Id != pluginId)
                                                     .ToList();
+                    CommandLineUtils.AppendSuccessMessage(Console.CursorLeft, Console.CursorTop, "DONE");
+                    CommandLineUtils.PrintInfoMessage("Searching for dependencies licenses and vulnerabilities...  ");
+                    int cursorLeft = Console.CursorLeft, cursorTop = Console.CursorTop;
                     List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
-                    string report = GenerateReport(dependenciesEvaluated, projectDir.Name, policy);
-                    Console.WriteLine("Produced report locally.");
+                    CommandLineUtils.AppendSuccessMessage(cursorLeft, cursorTop, "DONE");
+                    string report = GenerateReport(dependenciesEvaluated, policy);
+                    CommandLineUtils.PrintSuccessMessage("Produced report locally.");
                     StoreReport(report);
                     double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
-                    Console.WriteLine("Plugin execution time: " + seconds);
+                    CommandLineUtils.PrintInfoMessage("Plugin execution time: " + seconds);
                 }
                 else
                 {
-                    Console.WriteLine($"Packages.config file not found in project {projectDir.Name}");
+                    CommandLineUtils.PrintErrorMessage($"Packages.config file not found in project {projectDir.Name}");
                 }
             }
         }
@@ -61,24 +67,24 @@ namespace DotnetDependencyAnalyzer
             string[] osdaFiles = Directory.GetFiles(projectPath, ".osda");
             if (osdaFiles.Length == 0)
             {
-                Console.WriteLine("Canceled Report. This project does not contain a policy file (.osda).");
+                CommandLineUtils.PrintErrorMessage("This project does not contain a policy file (.osda).");
                 policy = null;
                 return false;
             }
             policy = JsonConvert.DeserializeObject<ProjectPolicy>(File.ReadAllText(osdaFiles[0]));
             if (policy.Id == "")
             {
-                Console.WriteLine("Canceled Report. Project id not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project id not specified in policy.");
                 return false;
             }
             if (policy.Name == "")
             {
-                Console.WriteLine("Canceled Report. Project name not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project name not specified in policy.");
                 return false;
             }
             if(policy.Admin == "")
             {
-                Console.WriteLine("Canceled Report. Project administrator name not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project administrator name not specified in policy.");
                 return false;
             }
             return true;
@@ -93,8 +99,9 @@ namespace DotnetDependencyAnalyzer
             {
                 vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                CommandLineUtils.PrintWarningMessage($"An error occurred while trying to fetch dependencies vulnerabilities: {e.Message}");
                 vulnerabilitiesFetchError = true;
             }
 
@@ -109,9 +116,10 @@ namespace DotnetDependencyAnalyzer
                 {
                     dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo, policy.ApiCacheTime);
                 }
-                catch (Exception) {
+                catch (Exception e) {
+                    CommandLineUtils.PrintWarningMessage($"An error occurred while trying to fetch {package.Id}.{package.Version} license: {e.Message}");
                     dependenciesLicenses[i] = new List<License>();
-                    licensesFetchErrors.Add($"{package.Id}:{package.Version}");
+                    licensesFetchErrors.Add($"{package.Id}.{package.Version}");
                 }
                 ++i;
             }
@@ -136,10 +144,11 @@ namespace DotnetDependencyAnalyzer
             return dependencies;
         }
 
-        private static string GenerateReport(List<Dependency> dependenciesEvaluated, string projectName, ProjectPolicy policy)
+        private static string GenerateReport(List<Dependency> dependenciesEvaluated, ProjectPolicy policy)
         {
             string dateTime = string.Concat(DateTime.UtcNow.ToString("s"), "Z");
-            Report report = new Report(policy.Id, policy.Version, projectName, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner, policy.Admin)
+            string errorInfo = GetErrorInfo();
+            Report report = new Report(policy.Id, policy.Version, policy.Name, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner, policy.Admin, errorInfo)
             {
                 Dependencies = dependenciesEvaluated
             };
@@ -150,15 +159,33 @@ namespace DotnetDependencyAnalyzer
 
         private static void StoreReport(string report)
         {
-            var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
-            if (result.IsSuccessStatusCode)
+            try
             {
-                Console.WriteLine("Report stored with success");
+                var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
+                if (result.IsSuccessStatusCode)
+                {
+                    CommandLineUtils.PrintSuccessMessage("Report stored with success");
+                }
+                else
+                {
+                    CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
+                }
             }
-            else
+            catch (HttpRequestException)
             {
-                Console.WriteLine("An error during Report storage");
+                CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
             }
+        }
+
+        private static string GetErrorInfo()
+        {
+            string vulnerabilitiesErrorMessage = "An error occurred while trying to fetch dependencies vulnerabilities.";
+            if (licensesFetchErrors.Count == 0)
+            {
+                return (vulnerabilitiesFetchError) ? vulnerabilitiesErrorMessage : null;
+            }
+            string licensesErrorMessage = $"An error occurred while trying to fetch licenses from the following dependencies: {string.Join(",", licensesFetchErrors)}.";
+            return (vulnerabilitiesFetchError) ? licensesErrorMessage + vulnerabilitiesErrorMessage : licensesErrorMessage;
         }
     }
 }

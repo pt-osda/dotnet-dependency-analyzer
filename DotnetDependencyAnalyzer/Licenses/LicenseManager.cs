@@ -37,13 +37,22 @@ namespace DotnetDependencyAnalyzer.Licenses
             HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, string.Format(proxyUrl, package.Id, package.Version, licenseUrl));
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("OSDA_PROXY_TOKEN"));
             req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
-            HttpResponseMessage resp = await httpClient.SendAsync(req);
+            HttpResponseMessage resp;
+            try
+            {
+                resp = await httpClient.SendAsync(req);
+            }
+            catch (HttpRequestException)
+            {
+                throw new Exception("Cannot reach central server.");
+            }
+            
             if (!resp.IsSuccessStatusCode)
             {
                 throw new Exception(await resp.Content.ReadAsStringAsync());
             }
-            string content = await resp.Content.ReadAsStringAsync();
-            License[] licensesResp = JsonConvert.DeserializeObject<License[]>(content);
+            string respBody = await resp.Content.ReadAsStringAsync();
+            License[] licensesResp = JsonConvert.DeserializeObject<License[]>(respBody);
             licenses.AddRange(licensesResp);
 
             return licenses;

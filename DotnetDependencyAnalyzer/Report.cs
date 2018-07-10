@@ -84,6 +84,7 @@ namespace DotnetDependencyAnalyzer
             MainVersion = mainVersion;
             Description = description;
             Licenses = new List<License>();
+            Vulnerabilities = new List<Vulnerability>();
             Direct = true;
         }
     }

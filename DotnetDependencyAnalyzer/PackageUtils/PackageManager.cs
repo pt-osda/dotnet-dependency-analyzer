@@ -13,15 +13,22 @@ namespace DotnetDependencyAnalyzer.PackageUtils
         public static PackageInfo GetPackageInfo(string path)
         {
             string packageFilePath = GetPackageFilePath(path);
-            NuspecReader packageReader = new PackageArchiveReader(packageFilePath).NuspecReader;
-            return new PackageInfo
+            try
             {
-                Id = packageReader.GetId(),
-                Version = packageReader.GetVersion().OriginalVersion,
-                LicenseUrl = packageReader.GetLicenseUrl(),
-                ProjectUrl = packageReader.GetProjectUrl(),
-                Description = packageReader.GetDescription()
-            };
+                NuspecReader packageReader = new PackageArchiveReader(packageFilePath).NuspecReader;
+                return new PackageInfo
+                {
+                    Id = packageReader.GetId(),
+                    Version = packageReader.GetVersion().OriginalVersion,
+                    LicenseUrl = packageReader.GetLicenseUrl(),
+                    ProjectUrl = packageReader.GetProjectUrl(),
+                    Description = packageReader.GetDescription()
+                };
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>

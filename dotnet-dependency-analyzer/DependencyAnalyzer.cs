@@ -21,42 +21,51 @@ namespace DotnetDependencyAnalyzer.NetCore
         private static string packagesRootPath;
         private static string projectAssetsPath;
 
+        private static List<string> licensesFetchErrors = new List<string>();
+        private static bool vulnerabilitiesFetchError = false;
+
         private static readonly string reportAPIUrl = "http://35.234.147.77/report";
 
         public static HttpClient Client { get; } = new HttpClient();
 
         public static void Main(string[] args)
         {
-			projectPath = (args.Length == 0) ? "./" : args[0];
+            CommandLineUtils.PrintLogo();
+            projectPath = (args.Length == 0) ? "./" : args[0];
             if(Directory.GetFiles(projectPath, "*.csproj").Length == 0)
             {
                 Console.WriteLine( args.Length==0 ? "Project not found in current directory" : "Project not found in the directory specified");
                 return;
             }
             DateTime startTime = DateTime.UtcNow;
-            Console.WriteLine("Plugin is running... ");
+            CommandLineUtils.PrintInfoMessage("Plugin is running... ");
             string projectName = new DirectoryInfo(projectPath).Name;
             RetrieveNugetProperties(string.Format(nugetPropsFile, projectPath, projectName));
-            Console.WriteLine($"Project Name: {projectName}");
+            CommandLineUtils.PrintInfoMessage($"Project Name: {projectName}");
             string projectFilePath = Path.Combine(projectPath, string.Format(projectFile, projectName));
 
             if (TryGetPolicy(out ProjectPolicy policy))
             {
                 if (File.Exists(projectFilePath))
                 {
+                    CommandLineUtils.PrintInfoMessage("Finding project dependencies...  ");
                     List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(projectFilePath, projectAssetsPath)
                                                     .Distinct()
                                                     .ToList();
+                    CommandLineUtils.AppendSuccessMessage(Console.CursorLeft, Console.CursorTop, "DONE");
+                    CommandLineUtils.PrintInfoMessage("Searching for dependencies licenses and vulnerabilities...  ");
+                    int cursorLeft = Console.CursorLeft, cursorTop = Console.CursorTop;
                     List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
-                    string report = GenerateReport(dependenciesEvaluated, projectName, policy);
-                    Console.WriteLine("Produced report locally.");
+                    CommandLineUtils.AppendSuccessMessage(cursorLeft, cursorTop, "DONE");
+                    string report = GenerateReport(dependenciesEvaluated, policy);
+                    CommandLineUtils.PrintSuccessMessage("Produced report locally.");
                     StoreReport(report);
                     double seconds = (DateTime.UtcNow - startTime).TotalSeconds;
-                    Console.WriteLine("Plugin execution time: " + seconds);
+                    CommandLineUtils.PrintInfoMessage("Plugin execution time: " + seconds);
                 }
                 else
                 {
-                    Console.WriteLine($".csproj file not found in project {projectName}");
+                    CommandLineUtils.PrintErrorMessage($"Packages.config file not found in project {projectName}");
                 }
             }
         }
@@ -77,24 +86,24 @@ namespace DotnetDependencyAnalyzer.NetCore
             string[] osdaFiles = Directory.GetFiles(projectPath, ".osda");
             if (osdaFiles.Length == 0)
             {
-                Console.WriteLine("Canceled report. This project does not contain a policy file (.osda).");
+                CommandLineUtils.PrintErrorMessage("This project does not contain a policy file (.osda).");
                 policy = null;
                 return false;
             }
             policy = JsonConvert.DeserializeObject<ProjectPolicy>(File.ReadAllText(osdaFiles[0]));
             if (policy.Id == "")
             {
-                Console.WriteLine("Canceled report. Project id not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project id not specified in policy.");
                 return false;
             }
             if (policy.Name == "")
             {
-                Console.WriteLine("Canceled report. Project name not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project name not specified in policy.");
                 return false;
             }
             if (policy.Admin == "")
             {
-                Console.WriteLine("Canceled report. Project administrator name not specified in policy.");
+                CommandLineUtils.PrintErrorMessage("Project administrator name not specified in policy.");
                 return false;
             }
             return true;
@@ -104,7 +113,16 @@ namespace DotnetDependencyAnalyzer.NetCore
         {
             List<Dependency> dependencies = new List<Dependency>();
 
-            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
+            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = null;
+            try
+            {
+                vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
+            }
+            catch (Exception e)
+            {
+                CommandLineUtils.PrintWarningMessage($"An error occurred while trying to fetch dependencies vulnerabilities: {e.Message}");
+                vulnerabilitiesFetchError = true;
+            }
 
             List<License>[] dependenciesLicenses = new List<License>[packages.Count];
             int i = 0;
@@ -121,9 +139,11 @@ namespace DotnetDependencyAnalyzer.NetCore
                     {
                         dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo, policy.ApiCacheTime);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        CommandLineUtils.PrintWarningMessage($"An error occurred while trying to fetch {package.Id}.{package.Version} license: {e.Message}");
                         dependenciesLicenses[i] = new List<License>();
+                        licensesFetchErrors.Add($"{package.Id}.{package.Version}");
                     }
                 }
                 ++i;
@@ -133,23 +153,27 @@ namespace DotnetDependencyAnalyzer.NetCore
             foreach (List<License> licenses in dependenciesLicenses)
             {
                 dependencies[i].Licenses = licenses.Select(license =>
-                {
-                    license.Valid = !policy.InvalidLicenses.Contains(license.Title);
-                    return license;
-                })
+                    {
+                        license.Valid = !policy.InvalidLicenses.Contains(license.Title);
+                        return license;
+                    })
                     .ToList();
-                dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
-                dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
+                if (!vulnerabilitiesFetchError)
+                {
+                    dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
+                    dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
+                }
                 ++i;
             }
 
             return dependencies;
         }
 
-        private static string GenerateReport(List<Dependency> dependenciesEvaluated, string projectName, ProjectPolicy policy)
+        private static string GenerateReport(List<Dependency> dependenciesEvaluated, ProjectPolicy policy)
         {
             string dateTime = string.Concat(DateTime.UtcNow.ToString("s"), "Z");
-            Report report = new Report(policy.Id, policy.Version, projectName, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner, policy.Admin)
+            string errorInfo = GetErrorInfo();
+            Report report = new Report(policy.Id, policy.Version, policy.Name, policy.Description, dateTime, policy.Organization, policy.Repo, policy.RepoOwner, policy.Admin, errorInfo)
             {
                 Dependencies = dependenciesEvaluated
             };
@@ -160,15 +184,33 @@ namespace DotnetDependencyAnalyzer.NetCore
 
         private static void StoreReport(string report)
         {
-            var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
-            if (result.IsSuccessStatusCode)
+            try
             {
-                Console.WriteLine("Report stored with success");
+                var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
+                if (result.IsSuccessStatusCode)
+                {
+                    CommandLineUtils.PrintSuccessMessage("Report stored with success");
+                }
+                else
+                {
+                    CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
+                }
             }
-            else
+            catch (HttpRequestException)
             {
-                Console.WriteLine("An error during report storage");
+                CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
             }
+        }
+
+        private static string GetErrorInfo()
+        {
+            string vulnerabilitiesErrorMessage = "An error occurred while trying to fetch dependencies vulnerabilities.";
+            if (licensesFetchErrors.Count == 0)
+            {
+                return (vulnerabilitiesFetchError) ? vulnerabilitiesErrorMessage : null;
+            }
+            string licensesErrorMessage = $"An error occurred while trying to fetch licenses from the following dependencies: {string.Join(",", licensesFetchErrors)}.";
+            return (vulnerabilitiesFetchError) ? licensesErrorMessage + vulnerabilitiesErrorMessage : licensesErrorMessage;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace DotnetDependencyAnalyzer.NetCore
         public string Admin { get; set; }
 
         [JsonProperty("invalid_licenses")]
-        public List<string> InvalidLicenses { get; set; }
+        public List<string> InvalidLicenses { get; set; } = new List<string>();
 
         [JsonProperty("api_cache_time")]
         public int ApiCacheTime { get; set; }
