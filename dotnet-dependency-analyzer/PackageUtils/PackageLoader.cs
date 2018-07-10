@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,9 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
                 List<NuGetPackage> packages = LoadPackages(stream)
                     .Select(package =>
                     {
+                        if (package.Version.StartsWith("$(")) {
+                            package.Version = GetPackageVersionFromAssets(targets[framework], package.Id);
+                        }
                         package.Direct = true;
                         string dependencyEntry = string.Format(assetsDependency, package.Id, package.Version);
                         package.Children = GetChildren(
@@ -36,6 +40,7 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
                         );
                         return package;
                     })
+                    .Where(package => package.Version != null)
                     .ToList();
 
                 // get indirect dependencies
@@ -46,9 +51,22 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
                     indirectDependencies.AddRange(GetIndirectDependencies(package.Children, targets[framework]));
                 }
                 packages.AddRange(indirectDependencies);
-
+                
                 return packages;
             }
+        }
+
+        private static string GetPackageVersionFromAssets(JToken jToken, string id)
+        {
+            foreach(var props in jToken.OfType<JProperty>())
+            {
+                string [] dependency = props.Name.Split("/");
+                if(dependency[0] == id)
+                {
+                    return dependency[1];
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -60,7 +78,15 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
         {
             var serializer = new XmlSerializer(typeof(Project));
             Project prj = (Project)serializer.Deserialize(packageConfig);
-            return prj.ItemGroup.Packages;
+            return prj.ItemGroups
+                .SelectMany(it => it.Packages)
+                .Where(package => package.Id != null && IsValidVersion(package))
+                .ToList();
+        }
+
+        private static bool IsValidVersion(NuGetPackage package)
+        {
+            return package.Version.StartsWith("$(") || Version.TryParse(package.Version, out Version v);
         }
 
         /// <summary>
@@ -75,10 +101,7 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
             {
                 foreach (JProperty prop in dependency["dependencies"])
                 {
-                    if (!prop.Name.StartsWith("System."))
-                    {
-                        deps.Add($"{prop.Name}:{prop.Value}");
-                    }
+					deps.Add($"{prop.Name}:{prop.Value}");
                 }
             }
             return deps;
@@ -102,8 +125,11 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
                     Direct = false,
                     Children = GetChildren(dependencies[child.Replace(":", "/")])
                 };
-                deps.Add(package);
-                deps.AddRange(GetIndirectDependencies(package.Children, dependencies));
+                if (IsValidVersion(package))
+                {
+                    deps.Add(package);
+                    deps.AddRange(GetIndirectDependencies(package.Children, dependencies));
+                }
             }
             return deps;
         }

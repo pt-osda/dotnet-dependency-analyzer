@@ -9,10 +9,14 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
     [XmlRoot(ElementName = "Project")]
     public class Project
     {
+        /// <summary>
+        /// List of package groups.
+        /// </summary>
         [XmlElement(ElementName = "ItemGroup")]
-        public ItemGroup ItemGroup { get; set; }
+        public List<ItemGroup> ItemGroups { get; set; }
     }
 
+    
     /// <summary>
     /// Represents ItemGroup element in .csproj file.
     /// </summary>

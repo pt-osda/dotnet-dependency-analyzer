@@ -19,6 +19,9 @@ namespace DotnetDependencyAnalyzer
         private static string projectPath;
         private static readonly string pluginId = "DotnetDependencyAnalyzer";
 
+        private static List<string> licensesFetchErrors = new List<string>();
+        private static bool vulnerabilitiesFetchError = false;
+
         private static readonly string reportAPIUrl = "http://35.234.147.77/report";
 
         public static HttpClient Client { get; } = new HttpClient();
@@ -84,8 +87,16 @@ namespace DotnetDependencyAnalyzer
         private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages, ProjectPolicy policy)
         {
             List<Dependency> dependencies = new List<Dependency>();
+            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = null;
 
-            VulnerabilityEvaluationResult[] vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
+            try
+            {
+                vulnerabilityEvaluationResult = await VulnerabilityEvaluation.EvaluatePackage(packages, policy.ApiCacheTime);
+            }
+            catch (Exception)
+            {
+                vulnerabilitiesFetchError = true;
+            }
 
             List<License>[] dependenciesLicenses = new List<License>[packages.Count];
             int i = 0;
@@ -100,6 +111,7 @@ namespace DotnetDependencyAnalyzer
                 }
                 catch (Exception) {
                     dependenciesLicenses[i] = new List<License>();
+                    licensesFetchErrors.Add($"{package.Id}:{package.Version}");
                 }
                 ++i;
             }
@@ -113,8 +125,11 @@ namespace DotnetDependencyAnalyzer
                         return license;
                     })
                     .ToList();
-                dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
-                dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
+                if (!vulnerabilitiesFetchError)
+                {
+                    dependencies[i].VulnerabilitiesCount = vulnerabilityEvaluationResult[i].VulnerabilitiesNumber;
+                    dependencies[i].Vulnerabilities = vulnerabilityEvaluationResult[i].VulnerabilitiesFound;
+                }
                 ++i;
             }
 

@@ -34,10 +34,13 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("admin")]
         public string Admin { get; set; }
 
+        [JsonProperty("error_info")]
+        public string ErrorInfo { get; set; }
+
         [JsonProperty("dependencies")]
         public List<Dependency> Dependencies { get; set; }
 
-        public Report(string id, string version, string name, string description, string timestamp, string organization, string repo, string repoOwner, string admin)
+        public Report(string id, string version, string name, string description, string timestamp, string organization, string repo, string repoOwner, string admin, string errorInfo)
         {
             Id = id;
             Version = version;
@@ -48,6 +51,7 @@ namespace DotnetDependencyAnalyzer
             Repo = repo;
             RepoOwner = repoOwner;
             Admin = admin;
+            ErrorInfo = errorInfo;
         }
     }
 

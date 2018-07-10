@@ -111,14 +111,20 @@ namespace DotnetDependencyAnalyzer.NetCore
             foreach (NuGetPackage package in packages)
             {
                 PackageInfo packageInfo = PackageManager.GetPackageInfo(packagesRootPath, package.Id, package.Version);
-                dependencies.Add(new Dependency(packageInfo.Id, packageInfo.Version, packageInfo.Description, package.Direct, package.Children));
-                try
+                string packageDescription = (packageInfo == null) ? "" : packageInfo.Description;
+                dependencies.Add(new Dependency(package.Id, package.Version, packageDescription, package.Direct, package.Children));
+                dependenciesLicenses[i] = new List<License>();
+                // It is not necessary to analyze System libraries license, only vulnerabilities 
+                if (packageInfo != null && (packageInfo.ProjectUrl != "https://dot.net/" || !package.Id.StartsWith("System.")) )
                 {
-                    dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo, policy.ApiCacheTime);
-                }
-                catch (Exception)
-                {
-                    dependenciesLicenses[i] = new List<License>();
+                    try
+                    {
+                        dependenciesLicenses[i] = await LicenseManager.TryGetLicenseName(packageInfo, policy.ApiCacheTime);
+                    }
+                    catch (Exception)
+                    {
+                        dependenciesLicenses[i] = new List<License>();
+                    }
                 }
                 ++i;
             }

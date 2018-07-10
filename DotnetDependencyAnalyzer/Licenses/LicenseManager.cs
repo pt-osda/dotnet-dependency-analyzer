@@ -38,12 +38,13 @@ namespace DotnetDependencyAnalyzer.Licenses
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("OSDA_PROXY_TOKEN"));
             req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
             HttpResponseMessage resp = await httpClient.SendAsync(req);
-            if (resp.IsSuccessStatusCode)
+            if (!resp.IsSuccessStatusCode)
             {
-                string content = resp.Content.ReadAsStringAsync().Result;
-                License[] licensesResp = JsonConvert.DeserializeObject<License[]>(content);
-                licenses.AddRange(licensesResp);
+                throw new Exception(await resp.Content.ReadAsStringAsync());
             }
+            string content = await resp.Content.ReadAsStringAsync();
+            License[] licensesResp = JsonConvert.DeserializeObject<License[]>(content);
+            licenses.AddRange(licensesResp);
 
             return licenses;
         }

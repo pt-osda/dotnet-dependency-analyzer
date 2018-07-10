@@ -15,15 +15,22 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
         public static PackageInfo GetPackageInfo(string rootPath, string packageId, string packageVersion)
         {
             string packageFilePath = GetPackageFilePath(rootPath, packageId, packageVersion);
-            NuspecReader packageReader = new PackageArchiveReader(packageFilePath).NuspecReader;
-            return new PackageInfo
+            try
             {
-                Id = packageReader.GetId(),
-                Version = packageReader.GetVersion().OriginalVersion,
-                LicenseUrl = packageReader.GetLicenseUrl(),
-                ProjectUrl = packageReader.GetProjectUrl(),
-                Description = packageReader.GetDescription()
-            };
+                NuspecReader packageReader = new PackageArchiveReader(packageFilePath).NuspecReader;
+                return new PackageInfo
+                {
+                    Id = packageReader.GetId(),
+                    Version = packageReader.GetVersion().OriginalVersion,
+                    LicenseUrl = packageReader.GetLicenseUrl(),
+                    ProjectUrl = packageReader.GetProjectUrl(),
+                    Description = packageReader.GetDescription()
+                };
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
