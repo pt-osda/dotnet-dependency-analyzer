@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace DotnetDependencyAnalyzer
 {
+    /// <summary>
+    /// Represents the report model.
+    /// </summary>
     [Serializable]
     public class Report
     {

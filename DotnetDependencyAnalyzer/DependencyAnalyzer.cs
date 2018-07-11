@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace DotnetDependencyAnalyzer
 {
@@ -28,7 +29,7 @@ namespace DotnetDependencyAnalyzer
 
         public static void Main(string[] args)
         {
-            CommandLineUtils.PrintLogo();
+            //CommandLineUtils.PrintLogo();
             DateTime startTime = DateTime.UtcNow;
             CommandLineUtils.PrintInfoMessage("Plugin is running... ");
             projectPath = args[0];
@@ -62,6 +63,11 @@ namespace DotnetDependencyAnalyzer
             }
         }
 
+        /// <summary>
+        /// Tries to get information about the project policy.
+        /// </summary>
+        /// <param name="policy">Object that represents a project policy.</param>
+        /// <returns></returns>
         private static bool TryGetPolicy(out ProjectPolicy policy)
         {
             string[] osdaFiles = Directory.GetFiles(projectPath, ".osda");
@@ -90,6 +96,12 @@ namespace DotnetDependencyAnalyzer
             return true;
         }
 
+        /// <summary>
+        /// Validates project dependencies according to their vulnerabilities and licenses.
+        /// </summary>
+        /// <param name="packages">List of packages of the project.</param>
+        /// <param name="policy">Project policy.</param>
+        /// <returns></returns>
         private static async Task<List<Dependency>> ValidateProjectDependencies(List<NuGetPackage> packages, ProjectPolicy policy)
         {
             List<Dependency> dependencies = new List<Dependency>();
@@ -144,6 +156,12 @@ namespace DotnetDependencyAnalyzer
             return dependencies;
         }
 
+        /// <summary>
+        /// Creates a report and stores it locally.
+        /// </summary>
+        /// <param name="dependenciesEvaluated">List of dependencies with its evaluation.</param>
+        /// <param name="policy">Project policy.</param>
+        /// <returns></returns>
         private static string GenerateReport(List<Dependency> dependenciesEvaluated, ProjectPolicy policy)
         {
             string dateTime = string.Concat(DateTime.UtcNow.ToString("s"), "Z");
@@ -157,11 +175,20 @@ namespace DotnetDependencyAnalyzer
             return jsonReport;
         }
 
+        /// <summary>
+        /// Stores a report on Central Server.
+        /// </summary>
+        /// <param name="report">Report to be stored.</param>
         private static void StoreReport(string report)
         {
+            HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, reportAPIUrl)
+            {
+                Content = new StringContent(report, Encoding.UTF8, "application/json")
+            };
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("CENTRAL_SERVER_TOKEN"));
             try
             {
-                var result = Client.PostAsync(reportAPIUrl, new StringContent(report, Encoding.UTF8, "application/json")).Result;
+                var result = Client.SendAsync(req).Result;
                 if (result.IsSuccessStatusCode)
                 {
                     CommandLineUtils.PrintSuccessMessage("Report stored with success");
@@ -177,6 +204,10 @@ namespace DotnetDependencyAnalyzer
             }
         }
 
+        /// <summary>
+        /// Gets the information about errors that occurred during a report.
+        /// </summary>
+        /// <returns></returns>
         private static string GetErrorInfo()
         {
             string vulnerabilitiesErrorMessage = "An error occurred while trying to fetch dependencies vulnerabilities.";
@@ -184,7 +215,7 @@ namespace DotnetDependencyAnalyzer
             {
                 return (vulnerabilitiesFetchError) ? vulnerabilitiesErrorMessage : null;
             }
-            string licensesErrorMessage = $"An error occurred while trying to fetch licenses from the following dependencies: {string.Join(",", licensesFetchErrors)}.";
+            string licensesErrorMessage = $"An error occurred while trying to fetch licenses from the following dependencies: {string.Join(",", licensesFetchErrors)}. ";
             return (vulnerabilitiesFetchError) ? licensesErrorMessage + vulnerabilitiesErrorMessage : licensesErrorMessage;
         }
     }

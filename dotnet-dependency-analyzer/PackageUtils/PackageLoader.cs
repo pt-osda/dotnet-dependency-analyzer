@@ -56,9 +56,15 @@ namespace DotnetDependencyAnalyzer.NetCore.PackageUtils
             }
         }
 
-        private static string GetPackageVersionFromAssets(JToken jToken, string id)
+        /// <summary>
+        /// Finds a dependency version, searching for its id.
+        /// </summary>
+        /// <param name="dependencies">JToken object that represents every dependencies in assets file.</param>
+        /// <param name="id">Dependency id.</param>
+        /// <returns></returns>
+        private static string GetPackageVersionFromAssets(JToken dependencies, string id)
         {
-            foreach(var props in jToken.OfType<JProperty>())
+            foreach(var props in dependencies.OfType<JProperty>())
             {
                 string [] dependency = props.Name.Split("/");
                 if(dependency[0] == id)

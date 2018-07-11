@@ -35,7 +35,7 @@ namespace DotnetDependencyAnalyzer.NetCore.Licenses
 
             HttpClient httpClient = DependencyAnalyzer.Client;
             HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, string.Format(proxyUrl, package.Id, package.Version, licenseUrl));
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("OSDA_PROXY_TOKEN"));
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("CENTRAL_SERVER_TOKEN"));
             req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
             HttpResponseMessage resp;
             try

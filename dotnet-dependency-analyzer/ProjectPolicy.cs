@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace DotnetDependencyAnalyzer.NetCore
 {
+    /// <summary>
+    /// Represents the project policy model.
+    /// </summary>
     [Serializable]
     public class ProjectPolicy
     {
