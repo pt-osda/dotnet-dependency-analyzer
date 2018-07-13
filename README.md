@@ -78,6 +78,7 @@ After installed, a batch file named DependencyAnalyzer is placed in the solution
 ```
 DependencyAnalyzer.bat
 ```
+
 :warning: In order for the plugin to be executed successfully, projects must be built before because plugin uses information contained on solution packages folder.
 
 
@@ -94,8 +95,21 @@ Analyze Open Source dependencies used in .NET Core projects.
 
 This package is available via NuGet and can be installed using one of the following commands:
 ```
- dotnet tool install -g dotnet-dependency-analyzer
- dotnet tool install dotnet-dependency-analyzer --tool-path <path>
+ dotnet tool install -g dotnet-dependency-analyzer // 1)
+ dotnet tool install dotnet-dependency-analyzer --tool-path <path> // 2)
 ```
+**1)** Plugin is installed globally on the machine
+
+**2)** Plugin is installed on a specific folder (tool-path)
 
 Other helpful commands (e.g update or uninstall package) can be found [here](https://docs.microsoft.com/pt-pt/dotnet/core/tools/global-tools#other-cli-commands).
+
+## How to execute plugin
+
+```
+dotnet-dependency-analyzer <project-path>
+
+```
+* **project-path**: optional parameter. If not specified, the plugin will search for a project in the current directory of the command line. Otherwise, the plugin will search for a project in the specified path.
+
+:warning: In order for the plugin to be executed successfully, projects must be built before because plugin uses information contained on solution packages folder.
