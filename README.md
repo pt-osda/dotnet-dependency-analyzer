@@ -1,6 +1,6 @@
 # Requirements
-* Requires NuGet 3.3 or higher for .NET Classic plugin and NuGet 3.5 or higher for .NET Core plugin
-* Requires .NET Core SDK 2.1.300 or later versions installed (**Only for .NET Core plugin**). [Download](https://www.microsoft.com/net/download)
+* Requires NuGet 3.3 or higher for .NET Classic plugin and NuGet 3.5 or higher for .NET Core plugin [Download](https://www.nuget.org/downloads)
+* Requires .NET Core SDK 2.1.300 or later versions installed (**Only for .NET Core plugin**) [Download](https://www.microsoft.com/net/download)
 * Projects **must** have a policy file named **.osda** with the following structure:
 ```
 {
