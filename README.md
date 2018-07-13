@@ -49,10 +49,6 @@
       "description": "The names of all invalid licenses. Default value is an empty collection",
       "type": "array"
     },
-    "fail": {
-      "description": "Indicates if the build should fail in case a vulnerability is found. Default value is false",
-      "type": "boolean"
-    },
     "api_cache_time": {
       "description": "Indicates, in seconds, the amount of time the cached results should be considered valid. If 0 (which is the default value), there are no restrictions on the lifetime of cached results",
       "type": "number"
