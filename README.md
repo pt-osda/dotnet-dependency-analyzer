@@ -1,6 +1,6 @@
 # Requirements
 * Requires NuGet 3.3 or higher for .NET Classic plugin and NuGet 3.5 or higher for .NET Core plugin
-* Requires .NET Core SDK 2.1.300 or later versions installed (**Only for .NET Core plugin**)
+* Requires .NET Core SDK 2.1.300 or later versions installed (**Only for .NET Core plugin**). [Download](https://www.microsoft.com/net/download)
 * Projects **must** have a policy file named **.osda** with the following structure:
 ```
 {
@@ -50,7 +50,7 @@
       "type": "boolean"
     },
     "api_cache_time": {
-      "description": "Indicates, in seconds, the amount of time the cached results used by the Proxy should be considered valid. If 0 (which is the default value), there are no restrictions on the lifetime of cached results",
+      "description": "Indicates, in seconds, the amount of time the cached results should be considered valid. If 0 (which is the default value), there are no restrictions on the lifetime of cached results",
       "type": "number"
     }
   },
@@ -98,4 +98,4 @@ This package is available via NuGet and can be installed using one of the follow
  dotnet tool install dotnet-dependency-analyzer --tool-path <path>
 ```
 
-Other helpful commands (e.g update or uninstall package) can be found here: https://docs.microsoft.com/pt-pt/dotnet/core/tools/global-tools#other-cli-commands.
+Other helpful commands (e.g update or uninstall package) can be found [here](https://docs.microsoft.com/pt-pt/dotnet/core/tools/global-tools#other-cli-commands).
