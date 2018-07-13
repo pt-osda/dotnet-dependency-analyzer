@@ -60,8 +60,8 @@
 
 # Plugin for .NET Classic projects
 
-[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/DotnetDependencyAnalyzer/)
-[![license](https://img.shields.io/github/license/pt-osda/dotnet-dependency-analyzer.svg)](https://github.com/pt-osda/dotnet-dependencies-analysis/blob/master/LICENSE)
+[![NuGet](https://img.shields.io/nuget/v/DotnetDependencyAnalyzer.svg)](https://www.nuget.org/packages/DotnetDependencyAnalyzer/)
+[![license](https://img.shields.io/github/license/pt-osda/dotnet-dependency-analyzer.svg)](https://github.com/pt-osda/dotnet-dependency-analyzer/blob/master/LICENSE)
 
 Analyze Open Source dependencies used in .NET Classic projects.
 
@@ -85,8 +85,8 @@ DependencyAnalyzer.bat
 
 # Plugin for .NET Core projects
 
-[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/dotnet-dependency-analyzer/)
-[![license](https://img.shields.io/github/license/pt-osda/dotnet-dependency-analyzer.svg)](https://github.com/pt-osda/dotnet-dependencies-analysis/blob/master/LICENSE)
+[![NuGet](https://img.shields.io/nuget/v/dotnet-dependency-analyzer.svg)](https://www.nuget.org/packages/dotnet-dependency-analyzer/)
+[![license](https://img.shields.io/github/license/pt-osda/dotnet-dependency-analyzer.svg)](https://github.com/pt-osda/dotnet-dependency-analyzer/blob/master/LICENSE)
 
 Analyze Open Source dependencies used in .NET Core projects.
 
