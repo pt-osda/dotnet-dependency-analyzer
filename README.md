@@ -1,7 +1,11 @@
 # Requirements
 * Requires NuGet 3.3 or higher for .NET Classic plugin and NuGet 3.5 or higher for .NET Core plugin [Download](https://www.nuget.org/downloads)
 * Requires .NET Core SDK 2.1.300 or later versions installed (**Only for .NET Core plugin**) [Download](https://www.microsoft.com/net/download)
-* Projects **must** have a policy file named **.osda** with the following structure:
+* Projects **must** have a policy file named **.osda**
+
+<details><summary>Policy file structure</summary>
+<p>
+
 ```
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
@@ -45,10 +49,6 @@
       "description": "The names of all invalid licenses. Default value is an empty collection",
       "type": "array"
     },
-    "fail": {
-      "description": "Indicates if the build should fail in case a vulnerability is found. Default value is false",
-      "type": "boolean"
-    },
     "api_cache_time": {
       "description": "Indicates, in seconds, the amount of time the cached results should be considered valid. If 0 (which is the default value), there are no restrictions on the lifetime of cached results",
       "type": "number"
@@ -57,6 +57,11 @@
   "required": ["project_id", "project_name", "admin"]
 }
 ```
+
+</p>
+</details>
+
+* To have an admin for the project, the user of the plugin must create an account in our website http://35.234.147.77/. The username must correspond to the one that is specified in the admin field of the poliy. Once that is done, a token must be generated in the link: http://35.234.147.77/user. This token must be added as an environment variable with the name **CENTRAL_SERVER_TOKEN**.
 
 # Plugin for .NET Classic projects
 
@@ -113,3 +118,7 @@ dotnet-dependency-analyzer <project-path>
 * **project-path**: optional parameter. If not specified, the plugin will search for a project in the current directory of the command line. Otherwise, the plugin will search for a project in the specified path.
 
 :warning: In order for the plugin to be executed successfully, projects must be built before because plugin uses information contained on solution packages folder.
+
+## Reports
+
+Once the plugins finish its execution, a report will be produced and stored in a server. The server is acessible in the following link: http://35.234.147.77/
