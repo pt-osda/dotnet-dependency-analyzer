@@ -61,6 +61,8 @@
 </p>
 </details>
 
+* To have an admin for the project, the user of the plugin must create an account in our website http://35.234.147.77/. The username must correspond to the one that is specified in the admin field of the poliy. Once that is done, a token must be generated in the link: http://35.234.147.77/user. This token must be added as an environment variable with the name **CENTRAL_SERVER_TOKEN**.
+
 # Plugin for .NET Classic projects
 
 [![NuGet](https://img.shields.io/nuget/v/DotnetDependencyAnalyzer.svg)](https://www.nuget.org/packages/DotnetDependencyAnalyzer/)
@@ -116,3 +118,7 @@ dotnet-dependency-analyzer <project-path>
 * **project-path**: optional parameter. If not specified, the plugin will search for a project in the current directory of the command line. Otherwise, the plugin will search for a project in the specified path.
 
 :warning: In order for the plugin to be executed successfully, projects must be built before because plugin uses information contained on solution packages folder.
+
+## Reports
+
+Once the plugins finish its execution, a report will be produced and stored in a server. The server is acessible in the following link: http://35.234.147.77/
