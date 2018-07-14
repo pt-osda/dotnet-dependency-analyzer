@@ -25,13 +25,12 @@ namespace DotnetDependencyAnalyzer.NetCore
         private static List<string> licensesFetchErrors = new List<string>();
         private static bool vulnerabilitiesFetchError = false;
 
-        private static readonly string reportAPIUrl = "http://35.234.147.77/report";
+        private static readonly string reportAPIUrl = "http://35.234.151.254/report";
 
         public static HttpClient Client { get; } = new HttpClient();
 
         public static void Main(string[] args)
         {
-            //CommandLineUtils.PrintLogo();
             projectPath = (args.Length == 0) ? "./" : args[0];
             if(Directory.GetFiles(projectPath, "*.csproj").Length == 0)
             {
@@ -53,11 +52,10 @@ namespace DotnetDependencyAnalyzer.NetCore
                     List<NuGetPackage> packagesFound = PackageLoader.LoadPackages(projectFilePath, projectAssetsPath)
                                                     .Distinct()
                                                     .ToList();
-                    CommandLineUtils.AppendSuccessMessage(Console.CursorLeft, Console.CursorTop, "DONE");
+                    CommandLineUtils.PrintSuccessMessage("Finding project dependencies DONE");
                     CommandLineUtils.PrintInfoMessage("Searching for dependencies licenses and vulnerabilities...  ");
-                    int cursorLeft = Console.CursorLeft, cursorTop = Console.CursorTop;
                     List<Dependency> dependenciesEvaluated = ValidateProjectDependencies(packagesFound, policy).Result;
-                    CommandLineUtils.AppendSuccessMessage(cursorLeft, cursorTop, "DONE");
+                    CommandLineUtils.PrintSuccessMessage("Searching for dependencies licenses and vulnerabilities DONE");
                     string report = GenerateReport(dependenciesEvaluated, policy);
                     CommandLineUtils.PrintSuccessMessage("Produced report locally.");
                     StoreReport(report);
@@ -217,14 +215,21 @@ namespace DotnetDependencyAnalyzer.NetCore
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("CENTRAL_SERVER_TOKEN"));
             try
             {
-                var result = Client.SendAsync(req).Result;
-                if (result.IsSuccessStatusCode)
+                var resp = Client.SendAsync(req).Result;
+                if (resp.IsSuccessStatusCode)
                 {
                     CommandLineUtils.PrintSuccessMessage("Report stored with success");
                 }
                 else
                 {
-                    CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
+                    if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        CommandLineUtils.PrintErrorMessage("Invalid Token (CENTRAL_SERVER_TOKEN)");
+                    }
+                    else
+                    {
+                        CommandLineUtils.PrintErrorMessage("An error occurred during Report storage.");
+                    }
                 }
             }
             catch (HttpRequestException)

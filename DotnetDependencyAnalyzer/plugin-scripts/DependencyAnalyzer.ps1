@@ -4,7 +4,7 @@ Get-Content ($solution.FullName) |
   Select-String 'Project\(' |
     ForEach-Object {
       $projectParts = $_ -Split '[,=]' | ForEach-Object { $_.Trim('[ "{}]') }
-	  $pluginPath = Join-Path -Path ".\" -ChildPath "packages/DotnetDependencyAnalyzer.1.2.0/tools"
+	  $pluginPath = Join-Path -Path ".\" -ChildPath "packages/DotnetDependencyAnalyzer.1.2.2/tools"
 	  
 	  $projectPath = Join-Path -Path ".\" -ChildPath $projectParts[1]
 	  $project = (Get-ChildItem -Path $projectPath -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1)
@@ -15,5 +15,4 @@ Get-Content ($solution.FullName) |
 		Write-Output ''
 	  }
 	}
-	Read-Host 'Press ENTER to exit plugin'
 

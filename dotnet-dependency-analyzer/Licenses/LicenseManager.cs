@@ -10,7 +10,7 @@ namespace DotnetDependencyAnalyzer.NetCore.Licenses
 {
     public class LicenseManager
     {
-        private static readonly string proxyUrl = "http://35.234.147.77/nuget/dependency/{0}/{1}/licenses?licenseUrl={2}";
+        private static readonly string proxyUrl = "http://35.234.151.254/nuget/dependency/{0}/{1}/licenses?licenseUrl={2}";
 
         /// <summary>
         /// Requests server proxy to get the license of a package.
@@ -36,7 +36,9 @@ namespace DotnetDependencyAnalyzer.NetCore.Licenses
             HttpClient httpClient = DependencyAnalyzer.Client;
             HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Get, string.Format(proxyUrl, package.Id, package.Version, licenseUrl));
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Environment.GetEnvironmentVariable("CENTRAL_SERVER_TOKEN"));
-            req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
+            if(maxAge != 0){
+				req.Headers.CacheControl = new CacheControlHeaderValue() { MaxAge = new TimeSpan(0, 0, maxAge) };
+			}
             HttpResponseMessage resp;
             try
             {
@@ -49,6 +51,10 @@ namespace DotnetDependencyAnalyzer.NetCore.Licenses
 
             if (!resp.IsSuccessStatusCode)
             {
+                if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    throw new Exception("Invalid Token (CENTRAL_SERVER_TOKEN)");
+                }
                 throw new Exception(await resp.Content.ReadAsStringAsync());
             }
             string respBody = await resp.Content.ReadAsStringAsync();
