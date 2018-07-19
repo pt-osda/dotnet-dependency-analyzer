@@ -40,6 +40,9 @@ namespace DotnetDependencyAnalyzer
         [JsonProperty("error_info")]
         public string ErrorInfo { get; set; }
 
+        [JsonProperty("successful_build")]
+        public bool SuccessfulBuild { get; set; }
+
         [JsonProperty("dependencies")]
         public List<Dependency> Dependencies { get; set; }
 
@@ -55,6 +58,7 @@ namespace DotnetDependencyAnalyzer
             RepoOwner = repoOwner;
             Admin = admin;
             ErrorInfo = errorInfo;
+            SuccessfulBuild = true;
         }
     }
 

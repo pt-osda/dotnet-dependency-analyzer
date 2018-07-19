@@ -43,6 +43,9 @@ namespace DotnetDependencyAnalyzer.NetCore
         [JsonProperty("dependencies")]
         public List<Dependency> Dependencies { get; set; }
 
+        [JsonProperty("successful_build")]
+        public bool SuccessfulBuild { get; set; }
+
         public Report(string id, string version, string name, string description, string timestamp, string organization, string repo, string repoOwner, string admin, string errorInfo)
         {
             Id = id;
@@ -55,6 +58,7 @@ namespace DotnetDependencyAnalyzer.NetCore
             RepoOwner = repoOwner;
             Admin = admin;
             ErrorInfo = errorInfo;
+            SuccessfulBuild = true;
         }
     }
 
