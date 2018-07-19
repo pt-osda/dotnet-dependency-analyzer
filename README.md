@@ -79,6 +79,11 @@ Install-Package DotnetDependencyAnalyzer
 
 ## How to execute plugin
 
+Before executing the plugin, you need to open a command line in administrator mode and execute the following command:
+```
+powershell.exe Set-ExecutionPolicy Unrestricted
+```
+
 After installed, a batch file named DependencyAnalyzer is placed in the solution folder. This file analyzes all projects of the solution. To execute the plugin, execute the batch file:
 ```
 DependencyAnalyzer.bat
